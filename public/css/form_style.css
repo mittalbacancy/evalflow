@@ -1,0 +1,357 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+font,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+select,
+input,
+option {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+nav,
+section,
+summary {
+    display: block;
+}
+audio,
+canvas,
+video {
+    display: inline-block;
+}
+audio:not([controls]) {
+    display: none;
+    height: 0;
+}
+pre {
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+q {
+    quotes: none;
+}
+q:before,
+q:after {
+    content: "";
+    content: none;
+}
+small {
+    font-size: 80%;
+}
+sub,
+sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+sup {
+    top: -0.5em;
+}
+sub {
+    bottom: -0.25em;
+}
+nav ul,
+nav ol {
+    list-style: none;
+    list-style-image: none;
+}
+button,
+input,
+select,
+textarea {
+    font-size: 100%;
+    margin: 0;
+    vertical-align: baseline;
+}
+textarea {
+    overflow: auto;
+    vertical-align: top;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+/* remember to define focus styles! */
+:focus {
+    outline: 0;
+}
+ol,
+ul {
+    list-style: none;
+}
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+caption,
+th,
+td {
+    text-align: left;
+    font-weight: normal;
+}
+a {
+    text-decoration: none;
+    outline: none;
+    transition: all 200ms ease-in-out 0s;
+    -moz-transition: all 200ms ease-in-out 0s;
+    -webkit-transition: all 200ms ease-in-out 0s;
+}
+a:hover {
+    color: #f8981d;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+    content: "";
+}
+blockquote,
+q {
+    quotes: "" "";
+}
+table {
+    border: 0 none;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+td {
+    vertical-align: top;
+}
+img {
+    border: 0 none;
+    max-width: 100%;
+}
+/* End hide from IE Mac */
+.none {
+    display: none;
+} /* End Clearfix */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+nav,
+section {
+    display: block;
+}
+.clear {
+    clear: both;
+}
+/* For modern browsers */
+.cf:before,
+.cf:after {
+    content: "";
+    display: table;
+}
+.cf:after {
+    clear: both;
+}
+/* For IE 6/7 (trigger hasLayout) */
+/*----------intial declartaion of css end----------*/
+
+/* font family start */
+/* font family end */
+
+/* base css start */
+
+html {
+    width: 100%;
+    height: 100%;
+}
+body {
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: "Roboto", sans-serif;
+    font-weight: normal;
+    font-size: 1em;
+    line-height: 1.42857143;
+    overflow-x: hidden;
+    color: #000;
+}
+#wrapper {
+    width: 100%;
+    float: left;
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+}
+.title {
+    margin: 40px 0px;
+    font-weight: 700;
+    font-size: 26px;
+    font-style: normal;
+    text-decoration: none;
+    color: #0046da;
+    line-height: normal;
+}
+.connectthat-body label {
+    font-size: 18px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+.connectthat-body .form-control {
+    font-size: 18px;
+    margin-bottom: 40px;
+}
+.checkround {
+    position: absolute;
+    top: 10%;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background-color: #fff;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 50%;
+    border-color: #dddddd;
+}
+.radio input:checked ~ .checkround {
+    background-color: #fff;
+    border-color: #0046da;
+}
+.radio .checkround:after {
+    width: 10px;
+    height: 10px;
+    top: 2px;
+    left: 2px;
+    border-radius: 50%;
+    background: #0046da;
+    content: "";
+    position: absolute;
+    display: none;
+}
+.radio input:checked ~ .checkround:after {
+    display: block;
+}
+.radio {
+    padding-left: 30px;
+    margin-top: 0px !important;
+    cursor: pointer;
+}
+input[type="radio"] {
+    display: none;
+}
+
+.radio-lbl label {
+    margin-bottom: 8px;
+    font-weight: normal;
+}
+.connectthat-body textarea {
+    max-width: 100%;
+    width: 400px;
+}
+.done-btn {
+    margin-bottom: 20px;
+    background-color: #0046da;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 400;
+    float: none !important;
+    font-size: 15px;
+    border: 1px solid transparent;
+}
+.btn.done-btn:active,
+.btn.done-btn:hover,
+.btn.done-btn:focus {
+    color: #fff !important;
+}
+.header {
+    background: #f65874;
+    color: #fff;
+    position: fixed;
+    width: 100%;
+    z-index: 999;
+}
+.logo {
+    margin: 5px 0px;
+    width: 90px;
+}
+.connectthat-form {
+    margin-top: 60px;
+}
+.mt-40 {
+    margin-top: 40px;
+}
