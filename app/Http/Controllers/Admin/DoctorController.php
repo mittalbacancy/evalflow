@@ -192,8 +192,11 @@ class DoctorController extends Controller
          
         $doctor = User::find($id);
         $hospitals = Hospital::all()->toArray();  
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
+                
         $selsurvey = DoctorSurvey::select('survey_id')->where('doctor_id',$id)->get()->toArray();
-        $survey = SurveyEmailTemplate::select('id','survey_name')->get()->toArray();
+        $survey = SurveyEmailTemplate::select('id','survey_name')->whereBetween('created_at',[$start_yr,$end_yr])->get()->toArray();
         return view('backend.doctor.edit', compact('doctor','hospitals','survey','selsurvey'));
     }
     public function add_department(Request $request){

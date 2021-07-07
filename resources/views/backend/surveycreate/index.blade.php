@@ -74,7 +74,7 @@
 
         <!-- Main content -->
         <section class="content">
-<label for="active">Year : </label>
+        <label for="active">Year : </label>
                 <select id="myRange" name="yearFilter"></select>
 
         <div class="row">
@@ -185,7 +185,7 @@
 
     var mySelect = $('#myRange');
 
-    if ({{ date('m') }}<= 6 && {{ date('d') }}<= 25){
+    /*if ({{ date('m') }}<= 6 && {{ date('d') }}<= 25){
         var startYear = {{(date('Y'))}};
     } else{
         var startYear = {{(date('Y'))+1}};
@@ -199,7 +199,8 @@
         mySelect.append(
             $('<option></option>').val((i-1) + "-" + i).html((i-1) + "-" + i)
         );
-    }
+    }*/
+    mySelect.html(jsGetYearList());
 
 
     $("select[name='yearFilter']").on("change",function () {
@@ -215,16 +216,20 @@
                 $('.data-tables').DataTable().destroy();
                 var res='';
                 $.each (data, function (key, value) {
+                    var url = '{{ URL::to("admin/surveyedit/:id")}}';
+                    url = url.replace(':id', value.id);
+                    //var routes = 'admin/surveyedit/'+value.id;
+                    var routes = "{{route('destroysurvey',':id')}}";
+                    routes = routes.replace(':id', value.id);
                     res +=
                     '<tr>'+
                         '<td>'+value.survey_name+'</td>'+
                         '<td>'+value.created_at+'</td>'+
-                        '<td><a href="{{ URL::to('admin/surveyedit/' . $survey->id)  }}" class="btn btn-primary btn-xs"><i class="fa fa-pencil"></i></a><form class="btn" action="{{ route('destroysurvey', $survey->id)}}" method="post">@csrf @method('DELETE')<button class="btn btn-danger btn-xs" type="submit"><i class="fa fa-trash"></i></button></form></td>'+
+                        '<td><a href="'+url+'" class="btn btn-primary btn-xs"><i class="fa fa-pencil"></i></a><form class="btn" action="'+routes+'" method="post">@csrf @method('DELETE')<button class="btn btn-danger btn-xs" type="submit"><i class="fa fa-trash"></i></button></form></td>'+
                    '</tr>';
                 });
                 $('tbody').html(res);
-                $('.data-tables').DataTable();
- 
+                $('.data-tables').DataTable(); 
             },
         });
     });

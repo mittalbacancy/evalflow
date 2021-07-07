@@ -1,12 +1,12 @@
 <h1>{{ config('app.url') }}</h1>
 
-{{ $title }}
+{{ $title ?? '' }}
 <br><br>
 
-User Email : {{ $useremail }}
+User Email : {{ $useremail ?? '' }}
 <br>
 
-User Name : {{ $username }}
+User Name : {{ $username ?? '' }}
 
 
 <br><br>

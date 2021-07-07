@@ -107,6 +107,10 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin', 'middleware' => ['rol
     //Route::post('google-calendar/connect', 'GoogleCalendarController@store');
     //Route::get('google', 'GoogleCalendarController@accessToken')->name('google');
 
+    Route::get("reports", "ReportsController@showEvaluationReport")->name("showEvaluationReport");
+    Route::post("reports", "ReportsController@showEvaluationReport")->name("EvaluationReportFilter");
+    Route::get("reports/pdf", "ReportsController@EvaluationReportPdf")->name("EvaluationReportPdf");
+    
 });
 
 //hospital routes start

@@ -22,7 +22,7 @@ class QuestionController extends Controller
      */
     public function index()
     {
-        if (date('m') <= 06) {
+        /*if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
             if (date('d') <= 24) {
@@ -33,7 +33,9 @@ class QuestionController extends Controller
         }
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
 
         $questions = DB::table('questions')
                      ->select('questions.*','questions.id as question_id','survey_email_template.*')
@@ -89,11 +91,12 @@ class QuestionController extends Controller
      */
     public function create()
     {
-      
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
         $questions = Questions::all()->toArray(); 
-        $surveys= SurveyEmailTemplate::all()->toArray();
+        $surveys= SurveyEmailTemplate::whereBetween('created_at',[$start_yr,$end_yr])->get()->toArray();
         $milestone_code= MileStoneCode::all()->toArray();
-
+        $main_arr = array();
         
             // echo "<pre>";
             // print_r($main_arr);
@@ -121,36 +124,65 @@ class QuestionController extends Controller
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),            
         ];
+
         $insertQue = Questions::create($question);
-      
-        $survey_value1 = $request->get('survey_value1');
-        $survey_value2 = $request->get('survey_value2');
-        $survey_value3 = $request->get('survey_value3');
-        $survey_value4 = $request->get('survey_value4');
+        $answer_type = $request->get('answer_type');
 
-        $survey_value1 = json_encode((array_filter($survey_value1)));
-        $survey_value2 = json_encode((array_filter($survey_value2)));
-        $survey_value3 = json_encode((array_filter($survey_value3)));
-        $survey_value4 = json_encode((array_filter($survey_value4)));
-        
-        $answers =[
-            'survey_template_id' => $request->get('survey_name'),
-            'question_id' => $insertQue->id,
-            'answer_type' => $request->get('answer_type'),
-            'option_1' => $request->get('option1'),
-            'option_2' => $request->get('option2'),
-            'option_3' => $request->get('option3'),
-            'option_4' => $request->get('option4'),
-            'code1' => $survey_value1,
-            'code2' => $survey_value2,
-            'code3' => $survey_value3,
-            'code4' => $survey_value4,                      
-        ];
-        $insertAns = Answers::create($answers);
+        //dd($request->all());
+        if($answer_type == 'dropdown'){
+            //dd($request->all());
+            $options = $request->get('options');
+            $survey_val_arr = explode(',',$request->get('survey_val_arr'));
+            $options_arr = [];
+            $code_arr=[];
+            $j=1;
+            for($i=0; $i<count($options); $i++){  
+                $survey_value = $request->get('survey_value_'.$survey_val_arr[$i].'_');
+                $survey_value = (array_filter($survey_value));
 
-        $question_id = $insertQue->id;
-        $survey_template_id = $request->get('survey_name');
-        $check_count = Answers::where('question_id',$question_id)->where('survey_template_id',$survey_template_id)->count();
+                $options_arr[$i] = $options[$i];
+                $code_arr[$i]['option_'.$j] = $survey_value;   
+                $j++;             
+            }
+            $answers =[
+                'survey_template_id' => $request->get('survey_name'),
+                'question_id' => $insertQue->id,
+                'answer_type' => $answer_type,
+                'dd_options' => json_encode($options_arr),                    
+                'dd_code' => json_encode($code_arr)                                   
+            ];
+            //dd($answers);
+            $insertAns = Answers::create($answers);
+        }else{
+            $survey_value1 = $request->get('survey_value1');
+            $survey_value2 = $request->get('survey_value2');
+            $survey_value3 = $request->get('survey_value3');
+            $survey_value4 = $request->get('survey_value4');
+
+            $survey_value1 = json_encode((array_filter($survey_value1)));
+            $survey_value2 = json_encode((array_filter($survey_value2)));
+            $survey_value3 = json_encode((array_filter($survey_value3)));
+            $survey_value4 = json_encode((array_filter($survey_value4)));
+            
+            $answers =[
+                'survey_template_id' => $request->get('survey_name'),
+                'question_id' => $insertQue->id,
+                'answer_type' => $request->get('answer_type'),
+                'option_1' => $request->get('option1'),
+                'option_2' => $request->get('option2'),
+                'option_3' => $request->get('option3'),
+                'option_4' => $request->get('option4'),
+                'code1' => $survey_value1,
+                'code2' => $survey_value2,
+                'code3' => $survey_value3,
+                'code4' => $survey_value4,                      
+            ];
+            $insertAns = Answers::create($answers);
+
+            $question_id = $insertQue->id;
+            $survey_template_id = $request->get('survey_name');
+            $check_count = Answers::where('question_id',$question_id)->where('survey_template_id',$survey_template_id)->count();
+        }
                
         return redirect('admin/questions')->with('success', 'Added successfully !');
     }

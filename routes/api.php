@@ -42,7 +42,6 @@ Route::group(['middleware' => 'auth:api'], function(){
     Route::get('surveyhistory', 'API\SurveyController@surveyHistory');
     Route::get('surveyurl', 'API\SurveyController@surveyUrl');
 
-
 });
 
 Route::group([    
@@ -91,6 +90,8 @@ Route::group(['prefix' => 'v2', 'namespace' => 'API\v2'], function () {
       Route::get('surveyurl', 'SurveyController@surveyUrl');
       Route::get('survey_track_history', 'SurveyController@surveyTrackHistory');
       
+      Route::post('sendLink', 'SurveyController@sendLink'); 
+       
   });
 
 });

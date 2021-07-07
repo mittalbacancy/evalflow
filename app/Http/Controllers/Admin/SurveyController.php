@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Session;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\URL;
-use Twilio;
+use Twilio,Mail;
 
 
 class SurveyController extends Controller
@@ -43,7 +43,7 @@ class SurveyController extends Controller
      */
     public function index(Request $request)
     {    
-        if (date('m') <= 06) {
+        /*if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
         	if (date('d') <= 24) {
@@ -55,7 +55,9 @@ class SurveyController extends Controller
         
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
            
         //$surveys = SurveyList::all();
          if(Auth::user()->hasRole("ROLE_ADMIN"))
@@ -368,35 +370,49 @@ class SurveyController extends Controller
     */
     public function viewSurvey(Request $request)
     {   
-        if (date('m') <= 06) {
+        /*if (date('m') <= 06 && date('d') <= 25) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
         	if (date('d') <= 24) {
             	$financial_year = (date('Y')-1) . '-' . date('Y');
          	} else {
+                
             	$financial_year = date('Y') . '-' . (date('Y') + 1);
          	}
         }
-
+        
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
 
-           $resident_id = '';
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
+
+        //dd($start_yr.'--'.$end_yr);
+
+       $resident_id = '';$survey_title='';
        $default_dropdown = DB::table('survey_lists')
                        ->leftJoin('users as doctor', 'doctor.id', '=', 'survey_lists.user_id')
                        ->leftJoin('users as resident', 'resident.id', '=', 'survey_lists.requestby')
                        ->select('survey_lists.*','doctor.first_name as doctor_first_name','doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name','doctor.active','survey_lists.requestby as resident_id');
+       
        if(Auth::user()->hasRole("ROLE_ADMIN")){
              
        }else{
             $user = Auth::user();
             $default_dropdown = $default_dropdown->where('resident.hospital_id',$user->hospital_id);
        }
-        $default_dropdown =  $default_dropdown->orderBy('resident.first_name', 'asc')
-                       ->groupBy('survey_lists.requestby')
-                       ->get()->toArray();   
+        $default_dropdown =  $default_dropdown
+                       ->where('doctor.active',1)
+                       ->where('resident.active',1)                       
+                       ->groupBy('survey_lists.requestby')                       
+                       ->orderBy('resident.first_name', 'asc')
+                       ->whereBetween('survey_lists.created_at', [$start_yr,$end_yr])
+                       ->get()->toArray(); 
+        $survey_title_list  = DB::table('survey_email_template');
+        $survey_title_list  = $survey_title_list->orderBy('survey_name', 'asc')->get()->toArray(); 
 
+        \DB::enableQueryLog();
         $survey_lists = DB::table('survey_lists')
                        ->leftJoin('users as doctor', 'doctor.id', '=', 'survey_lists.user_id')
                        ->leftJoin('users as resident', 'resident.id', '=', 'survey_lists.requestby')
@@ -431,7 +447,7 @@ class SurveyController extends Controller
                     $survey_lists = $survey_lists->where('survey_lists.requestby',$resident_id);
                 }
                 // $survey_lists = $survey_lists->whereBetween('survey_lists.created_at',[$start_date,$end_date])->where('survey_lists.requestby',$resident_id);
-// dd($start_date,$end_date,$resident_id);
+                // dd($start_date,$end_date,$resident_id);
             }else{
                 $user = Auth::user();
                 $survey_lists = $survey_lists
@@ -445,6 +461,15 @@ class SurveyController extends Controller
                 $survey_lists = $survey_lists->where('requestby',$resident_id);
             }else{
                 $survey_lists = $survey_lists->where('requestby',$resident_id)->where('resident.hospital_id',$user->hospital_id);
+
+            }
+         }elseif($request->survey_title != null && $request->survey_title != ""){
+            $survey_title = $request->survey_title;
+            if(Auth::user()->hasRole("ROLE_ADMIN")){
+                $survey_lists = $survey_lists->where('survey_lists.survey_title',$survey_title);
+            }else{
+                $survey_lists = $survey_lists->where('survey_lists.survey_title',$survey_title)
+                ->where('resident.hospital_id',$user->hospital_id);
 
             }
          }elseif($request->daterange != null && $request->daterange != "" ){
@@ -487,10 +512,11 @@ class SurveyController extends Controller
         $survey_lists = $survey_lists->orderBy('survey_lists.created_at', 'desc')
                                      ->whereBetween('survey_lists.created_at',[$start_yr,$end_yr])
                                      ->get()->toArray();
+        //dd(\DB::getQueryLog());
 
         $daterange = $request->daterange;   
             // dd($survey_lists);
-        return view('backend.doctorsurvey.index', compact('survey_lists','default_dropdown','resident_id','daterange'));
+        return view('backend.doctorsurvey.index', compact('survey_lists','default_dropdown','resident_id','daterange','survey_title_list','survey_title'));
     }
 
     public function filViewSurvey(Request $request)
@@ -561,67 +587,85 @@ class SurveyController extends Controller
 
    public function surveyStore(Request $request)
     { 
-        //print_r($request->all());exit;
-       if($request->survey_type == 1)
-       {
-        $request->validate([
-            'survey_type'=>'required',
-            'survey_name'=>'required',
-            // 'doctor_list'=>'required',
-            'resident_list'=>'required',
+           //print_r($request->all());exit;
+           if($request->survey_type == 1 || $request->survey_type == 5)
+           {
+            $request->validate([
+                'survey_type'=>'required',
+                'survey_name'=>'required',
+                // 'doctor_list'=>'required',
+                'resident_list'=>'required',
+               
+            ]);
+            }else{
+
+                 $request->validate([
+                'survey_type'=>'required',
+                'survey_name'=>'required',
+                'doctor_list'=>'required',
+                'resident_list'=>'required',
+               
+            ]);
+
+            }
+            $survey_title =  $surveys = DB::table('survey_email_template')
+                              ->where('id',$request->survey_name)
+                              ->first();
+
+            $survey_name = $survey_title->survey_name;
            
-        ]);
-        }else{
+            $uniquToken = $this->quickRandom();
+            $url_code_url = URL::to('/') . "/surveypreview/" . $uniquToken;
 
-             $request->validate([
-            'survey_type'=>'required',
-            'survey_name'=>'required',
-            'doctor_list'=>'required',
-            'resident_list'=>'required',
-           
-        ]);
+            $QRcodeurl = $url_code_url;
+            $input = $request->all();
+            $qrimg = time() . $input['survey_name'] . '.png';
 
-        }
-        $survey_title =  $surveys = DB::table('survey_email_template')
-                          ->where('id',$request->survey_name)
-                          ->first();
+            \QrCode::backgroundColor(255, 255, 0)
+                ->format('png')->size(300)
+                ->generate($QRcodeurl, public_path('QRcode/' . $qrimg));
 
-        $survey_name = $survey_title->survey_name;
-       
-        $uniquToken = $this->quickRandom();
-        $url_code_url = URL::to('/') . "/surveypreview/" . $uniquToken;
+                // Send link via text using Twillio
 
-        $QRcodeurl = $url_code_url;
-        $input = $request->all();
-        $qrimg = time() . $input['survey_name'] . '.png';
+            $user_id_twillio = $request->get('doctor_list');
+            $user_id_sms = $request->get('resident_list');
+            $user_twillio = DB::table('users')
+                              ->where('id',$user_id_twillio)
+                              ->first();
+            $user_name_sms = DB::table('users')
+                              ->where('id',$user_id_sms)
+                              ->first();
+            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';
+            // $user_mobilenumber_twillio = $user_twillio->mobilenumber;
 
-        \QrCode::backgroundColor(255, 255, 0)
-            ->format('png')->size(300)
-            ->generate($QRcodeurl, public_path('QRcode/' . $qrimg));
+            // if($request->survey_type == 4 && $user_mobilenumber_twillio && $request->send_sms == 1){
 
-            // Send link via text using Twillio
+            //     $message = "Please fill out an evaluation for $user_name_sms->first_name $user_name_sms->last_name at the following link: $QRcodeurl - Regards ConnectTHAT";
 
-        // $user_id_twillio = $request->get('doctor_list');
-        // $user_id_sms = $request->get('resident_list');
-        // $user_twillio = DB::table('users')
-        //                   ->where('id',$user_id_twillio)
-        //                   ->first();
-        // $user_name_sms = DB::table('users')
-        //                   ->where('id',$user_id_sms)
-        //                   ->first();
-        // $user_mobilenumber_twillio = $user_twillio->mobilenumber;
-
-        // if($request->survey_type == 4 && $user_mobilenumber_twillio && $request->send_sms == 1){
-
-        //     $message = "Please fill out an evaluation for $user_name_sms->first_name $user_name_sms->last_name at the following link: $QRcodeurl - Regards ConnectTHAT";
-
-        //     try {
-        //         Twilio::message($user_mobilenumber_twillio, $message);
-        //     } catch (\Exception $e) {
-        //         return back()->withError($e->getMessage());
-        //     }
-        // }
-                         
+            //     try {
+            //         Twilio::message($user_mobilenumber_twillio, $message);
+            //     } catch (\Exception $e) {
+            //         return back()->withError($e->getMessage());
+            //     }
+            // }
+        
+            if($request->survey_type == 4 && !empty($user_email_twillio) && $request->get('send_sms') == 1){          
+                try{
+                                    
+                    $username = isset($user_name_sms) ? $user_name_sms->first_name.' '.$user_name_sms->last_name : '';
+                    /*$data = array('preview_url'=>$QRcodeurl,'qrcode'=>$surveyList['qrcode'],'title'=>$surveyList['survey_title'],'user_name'=>$user->first_name." ".$user->last_name);*/
+                    $data = array('QRcodeurl' => $QRcodeurl,'username' => $username);
+                    Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio){
+                        $message->to($user_email_twillio, '')->subject
+                            ('Survey Preview link details');
+                        $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
+                    });
+                    
+                    
+                } catch(\Exception $e){
+                    //print_r($e->getMessage());
+                }
+            }
 
             $survey = new SurveyList;
             $survey->survey_id = $request->get('survey_name');
@@ -630,12 +674,12 @@ class SurveyController extends Controller
             $survey->preview_url = $QRcodeurl;
             $survey->survey_qrcode = $qrimg;
             $survey->urlcode = $uniquToken;
-            if($request->survey_type == 1){
-            $survey->user_id = $request->get('resident_list');
-            }else{
-            $survey->user_id =$request->get('doctor_list');   
-            }
             
+            if($request->survey_type == 1 || $request->survey_type == 5){
+                $survey->user_id = $request->get('resident_list');
+            }else{
+                $survey->user_id =$request->get('doctor_list');   
+            }            
             $survey->requestby =$request->get('resident_list');
             $survey->scheduled ='0';
             $survey->submitted = '0';
@@ -645,7 +689,7 @@ class SurveyController extends Controller
             $insert_id = $survey->id;
 
 
-      return redirect('admin/viewsurvey');
+            return redirect('admin/viewsurvey');
 
 
     }
@@ -680,7 +724,7 @@ class SurveyController extends Controller
 
     public function surveyList(Request $request)
     { 
-        if (date('m') <= 06) {
+        /*if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
         	if (date('d') <= 24) {
@@ -692,7 +736,9 @@ class SurveyController extends Controller
 
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
         
          $surveys = DB::table('survey_email_template')->orderBy('survey_email_template.created_at', 'desc')
                                      ->whereBetween('survey_email_template.created_at',[$start_yr,$end_yr])

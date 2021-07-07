@@ -23,7 +23,7 @@ class EvaluationCalculationController extends Controller
      */
     public function index()
     {
-        if (date('m') <= 06) {
+        /*if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
             if (date('d') <= 24) {
@@ -34,7 +34,9 @@ class EvaluationCalculationController extends Controller
         }
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
         
         //\DB::enableQueryLog();
         $residents = DB::table('users')
@@ -51,8 +53,8 @@ class EvaluationCalculationController extends Controller
 
                      $avr_count = array();
         
-
-                    foreach ($residents as $resident) {
+                    $avr_count = getEvaluationCalculation($residents);
+                    /*foreach ($residents as $resident) {
 
                     $final_count = array();
                     $final_count['first_name'] = $resident->first_name;
@@ -83,7 +85,7 @@ class EvaluationCalculationController extends Controller
                     $final_count['ICS3'] = (($resident->ICS3 > 0) && ($resident->count_ICS3 > 0))  ? round(($resident->ICS3)/$resident->count_ICS3,2): $resident->ICS3;
 
                     array_push($avr_count, $final_count);
-                         }
+                         }*/
                         
                  
                     

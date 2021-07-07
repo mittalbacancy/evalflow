@@ -181,6 +181,9 @@ return [
         Laravel\Passport\PassportServiceProvider::class,
         Collective\Html\HtmlServiceProvider::class,
 
+
+        Barryvdh\DomPDF\ServiceProvider::class,
+
     ],
 
     /*
@@ -233,6 +236,7 @@ return [
         'Html' => Collective\Html\HtmlFacade::class,
         'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
         'Twilio' => Aloha\Twilio\Support\Laravel\Facade\Twilio::class,
+        'PDF' => Barryvdh\DomPDF\Facade::class,
 
     ],
 

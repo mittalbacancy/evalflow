@@ -8764,6 +8764,7 @@ table.text-center th {
                   <input type="hidden" value="{{$questions_ids}}" name="questions_ids">
                   <div class="col-md-12">
                   @foreach ($surveys as $item=>$survey_value)
+                    <input type="hidden" name="answer_type_{{$survey_value->question_id}}" value="{{$survey_value->answer_type}}">
                     <label class="mt-40">{{$item + '1'}}. {!! $survey_value->question_title !!}</label>
                     @if(!empty($survey_value->option_1))
                     <div class="radio-lbl radio-oneline">
@@ -8823,9 +8824,31 @@ table.text-center th {
                       
                         <span class="checkround"></span> </label>
                       </div>
-                    @endif
+                    @endif                   
 
-                    @if(empty($survey_value->option_1)) 
+                    @if(!empty($survey_value->dd_options))
+                    @php
+                    $dd_options = json_decode($survey_value->dd_options);
+                    $dd_codes = json_decode($survey_value->dd_code,true);
+                    @endphp                                       
+                     <div class="row">
+                        <div class="col-md-5">
+                          <div class="form-group">
+                            <select class="form-control" name="option_{{$survey_value->question_id}}" {{$survey_track->submitted ? "disabled" : ""}} >
+                                <option value="">Select Option</option>
+                                @foreach($dd_options as $key=> $dd_option) 
+                                @php
+                                $option_val = 'option_'.($key+1);
+                                @endphp
+                                <option value="{{$option_val}}" {{ ( isset($survey_value->final_question) && ($survey_value->final_question == $survey_value->question_id) && $survey_value->final_answer == $option_val)? "selected" : (old('option_'.$survey_value->question_id)  == $option_val ? "selected" : "") }} >{{$dd_option}}</option>
+                                @endforeach
+                            </select>
+                          </div>
+                      </div>
+                     </div>
+                    
+                    @endif
+                    @if(empty($survey_value->option_1) && $survey_value->answer_type != 'dropdown') 
                       <div class="row">
                         <div class="col-md-12">
                           <div class="form-group">

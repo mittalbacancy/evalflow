@@ -137,7 +137,7 @@ class HospitalController extends Controller
             // Mail::send('emails', $data, function($message) {
             //     $message->to('shrutipatel@bacancytechnology.com', '')->subject
             //         ('New User Register');
-            //     $message->from('connectthatapp@gmail.com','Admin');
+            //     $message->from(env('MAIL_USERNAME'),'Admin');
             // });
 
             /************ Send email to Admin  ***********/

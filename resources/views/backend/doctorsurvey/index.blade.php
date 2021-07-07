@@ -86,13 +86,13 @@
         <div class="row">
             <div class="col-xs-12">
                 <div class="box" style="border:1px solid #d2d6de;">
-                <form method="post" action="{{ route('viewsurveyfilter') }}" enctype="multipart/form-data">
+                    <form method="post" action="{{ route('viewsurveyfilter') }}" enctype="multipart/form-data">
                     {!! csrf_field() !!}
                     <div class="box-header" style="background-color:#f5f5f5;border-bottom:1px solid #d2d6de;">
-                      <div class="form-group col-xs-6">
-                          <label for="active">Resident Name:</label>
-                            <select class="form-resident" name="survey_name" style="width: 50%">
-                            <option value="">Select</option>
+                            <div class="form-group col-xs-3">
+                              <label for="active">Resident Name:</label>
+                                <select class="form-resident" name="survey_name">
+                                <option value="">Select</option>
 
                                 <?php foreach ($default_dropdown as $survey_list) {?>
                                     <option value="{{ $survey_list->resident_id }}" @if($resident_id == $survey_list->resident_id) selected= "selected" @endif>{{ $survey_list->resident_first_name }} {{ $survey_list->resident_last_name }}</option>
@@ -100,12 +100,23 @@
                                 
                             </select>
                             </div>
-                            <div class="col-xs-4">
-                            <label for="active">Date:</label>
-                            <input type="text" autocomplete="off" class="form-resident" name="daterange" style="width: 60%" @if($daterange != null && $daterange != '') value="{{$daterange}}" @else value="" @endif />
+                            <div class="form-group col-xs-3">
+                              <label for="active">Survey Title:</label>
+                                <select class="form-resident" name="survey_title">
+                                <option value="">Select</option>
+
+                                <?php foreach ($survey_title_list as $survey_title_list) {?>
+                                    <option value="{{ $survey_title_list->survey_name }}" @if($survey_title == $survey_title_list->survey_name) selected= "selected" @endif>{{ $survey_title_list->survey_name }}</option>
+                                <?php } ?>
+                                
+                            </select>
                             </div>
-                            <div class="col-xs-2">
-                            <input type="submit" name="submit" class="btn btn-primary">
+                            <div class="col-xs-3">
+                            <label for="active">Date:</label>
+                            <input type="text" autocomplete="off" class="form-resident" name="daterange" @if($daterange != null && $daterange != '') value="{{$daterange}}" @else value="" @endif />
+                            </div>
+                            <div class="col-xs-2" style="margin-top:2%;">
+                            <input type="submit" name="submit"  class="btn btn-primary">
                             </div>
                             </div>
                             </form>
@@ -316,19 +327,26 @@ $(function() {
 <script type="text/javascript">
 
 var mySelect = $('#myRange');
-    if ({{ date('m') }}<= 6 && {{ date('d') }}<= 25){
+    /*if ({{ date('m') }}<= 6 && {{ date('d') }}<= 25){
         var startYear = {{(date('Y'))}};
     } else{
         var startYear = {{(date('Y'))+1}};
     }
     var endYear = 2019;
 
+    var first=0,selected='selected';
     for(var i = startYear; i > endYear;i--) {
- 
+        
+        if(first == 0){
+            first = 1;            
+        }else{
+            selected = '';
+        }
         mySelect.append(
-            $('<option></option>').val((i-1) + "-" + i).html((i-1) + "-" + i)
+            $('<option '+selected+'></option>').val((i-1) + "-" + i).html((i-1) + "-" + i)
         );
-    }
+    }*/
+    mySelect.html(jsGetYearList());
 
     $("select[name='yearFilter']").on("change",function () {
         
@@ -344,7 +362,7 @@ var mySelect = $('#myRange');
                 $('.data-tables').DataTable().destroy();
                 var res='';
                 $.each (data.default_dropdown, function (key, value) {
-                    var url = '{{ route('destroysurveylist', ";id")}}';
+                    var url = '{{ route('destroysurveylist', ":id")}}';
                     url = url.replace(':id', value.id);
                     res +=
                     '<tr>'+

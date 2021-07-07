@@ -95,7 +95,7 @@
 
   <!-- Copyright -->
   <div class="footer-copyright text-center py-3">
-      <p> <b>Email :</b> connectthatapp@gmail.com</p>
+      <p> <b>Email :</b> {{env('MAIL_USERNAME')}}</p>
       <p><b>Address :</b> 3740 Balfour Avenue, Oakland, California, 94610</p>
       <p><b>Phone number :</b> 440.537.9410 </p>
   </div>

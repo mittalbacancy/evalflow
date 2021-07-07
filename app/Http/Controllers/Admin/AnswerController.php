@@ -129,7 +129,7 @@ class AnswerController extends Controller
 
         $milestone_code= MileStoneCode::all()->toArray();
 
-        $answers = Answers::select('id','question_id','survey_template_id','answer_type','option_1','option_2','option_3','option_4','code1','code2','code3','code4')
+        $answers = Answers::select('id','question_id','survey_template_id','answer_type','option_1','option_2','option_3','option_4','code1','code2','code3','code4','dd_options','dd_code')
                            ->where('id', '=', $id)
                            ->first();
         $questions= Questions::where('email_template_id',$answers->survey_template_id)->where('active','1')->get()->toArray();
@@ -138,13 +138,17 @@ class AnswerController extends Controller
         $answers->code2 = json_decode($answers['code2']);
         $answers->code3 = json_decode($answers['code3']);
         $answers->code4 = json_decode($answers['code4']);
+        $answers->dd_options = json_decode($answers['dd_options']);
+        $answers->dd_code = json_decode($answers['dd_code'],true);
 
         $code1_key =(array)$answers['code1'];
         $code2_key =(array)$answers['code2'];
         $code3_key =(array)$answers['code3'];
         $code4_key =(array)$answers['code4'];
-
-        return view('backend.answers.edit', compact('answers','surveys','questions','email_template_id','milestone_code','code1_key','code2_key', 'code3_key', 'code4_key'));
+        $dd_code_key = (array)$answers['dd_code'];        
+        
+        //dd($answers);
+        return view('backend.answers.edit', compact('answers','surveys','questions','email_template_id','milestone_code','code1_key','code2_key', 'code3_key', 'code4_key','dd_code_key'));
     }
 
     /**
@@ -174,38 +178,71 @@ class AnswerController extends Controller
         if($answers->answer_type == "radio")
         {
 
-        $survey_value1 = $request->get('survey_value1');
-        $survey_value2 = $request->get('survey_value2');
-        $survey_value3 = $request->get('survey_value3');
-        $survey_value4 = $request->get('survey_value4');
+            $survey_value1 = $request->get('survey_value1');
+            $survey_value2 = $request->get('survey_value2');
+            $survey_value3 = $request->get('survey_value3');
+            $survey_value4 = $request->get('survey_value4');
 
-        $survey_value1 = json_encode((array_filter($survey_value1)));
-        $survey_value2 = json_encode((array_filter($survey_value2)));
-        $survey_value3 = json_encode((array_filter($survey_value3)));
-        $survey_value4 = json_encode((array_filter($survey_value4)));
+            $survey_value1 = json_encode((array_filter($survey_value1)));
+            $survey_value2 = json_encode((array_filter($survey_value2)));
+            $survey_value3 = json_encode((array_filter($survey_value3)));
+            $survey_value4 = json_encode((array_filter($survey_value4)));
 
-        $answers->option_1 = $request->get('option_1');
-        $answers->option_2 = $request->get('option_2');
-        $answers->option_3 = $request->get('option_3');
-        $answers->option_4 = $request->get('option_4');
-        $answers->code1 = $survey_value1;
-        $answers->code2 = $survey_value2;
-        $answers->code3 = $survey_value3;
-        $answers->code4 = $survey_value4; 
-         
+            $answers->option_1 = $request->get('option_1');
+            $answers->option_2 = $request->get('option_2');
+            $answers->option_3 = $request->get('option_3');
+            $answers->option_4 = $request->get('option_4');
+            $answers->code1 = $survey_value1;
+            $answers->code2 = $survey_value2;
+            $answers->code3 = $survey_value3;
+            $answers->code4 = $survey_value4; 
+         $answers->dd_options = NULL;
+         $answers->dd_code = NULL;
+        }
+        if($answers->answer_type == 'dropdown'){ 
+            //dd($request->all());    
+            $options = $request->get('options');
+            $survey_val_arr = explode(',',$request->get('survey_val_arr'));
+            $options_arr = [];
+            $code_arr=[];
+            $j=1;
+            //dd($survey_val_arr);
+            for($i=0; $i<count($options); $i++){   
+
+                $survey_value = $request->get('survey_value_'.$survey_val_arr[$i].'_');
+                $survey_value = (array_filter($survey_value));
+
+                $options_arr[$i] = $options[$i];
+                $code_arr[$i]['option_'.$j] = $survey_value;   
+                $j++;             
+                //dump($code_arr);
+            }            
+            $answers->dd_options = json_encode($options_arr);
+            $answers->dd_code = json_encode($code_arr);            
+
+            $answers->option_1 = "";
+            $answers->option_2 = "";
+            $answers->option_3 = "";
+            $answers->option_4 = "";
+            $answers->code1 = "";
+            $answers->code2 = "";
+            $answers->code3 = "";
+            $answers->code4 = ""; 
         }
         else
         {
-        $answers->option_1 = "";
-        $answers->option_2 = "";
-        $answers->option_3 = "";
-        $answers->option_4 = "";
-        $answers->code1 = "";
-        $answers->code2 = "";
-        $answers->code3 = "";
-        $answers->code4 = "";  
+            $answers->option_1 = "";
+            $answers->option_2 = "";
+            $answers->option_3 = "";
+            $answers->option_4 = "";
+            $answers->code1 = "";
+            $answers->code2 = "";
+            $answers->code3 = "";
+            $answers->code4 = "";  
+            $answers->dd_options = NULL;
+            $answers->dd_code = NULL;            
         }
-
+        //dd($answers);
         $answers->save();
 
         return redirect('admin/questions')->with('success', 'Updated successfully!');

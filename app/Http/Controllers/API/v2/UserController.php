@@ -77,6 +77,7 @@ class UserController extends Controller
                 return response()->json(['message'=>$error->email[0],'status'=>401,'data'=>array()], 200);            
 	        }
 			$input = $request->all(); 
+            $pass = $input['password'];
 	        $input['password'] = bcrypt($input['password']); 
             $input['activation_token'] = str_random(60);
 	        $user = User::create($input); 
@@ -92,9 +93,9 @@ class UserController extends Controller
 	        //$success['name'] =  $user->email;
 		//return response()->json(['success'=>$success], $this-> successStatus); 
             try{
-            	$user->notify(new SignupActivate($user));
+            	$user->notify(new SignupActivate($user,$pass));
             } catch(\Exception $e){
-
+                //echo $e->getMessage();exit;
             }
             /************ Send email to Admin  ***********/
 
@@ -106,13 +107,14 @@ class UserController extends Controller
 
             try{
 	            Mail::send('emails', $data, function($message) {
-	                $message->to('connectthatapp@gmail.com', '')->subject
+	                $message->to(env('MAIL_USERNAME'), '')->subject
 	                    ('New User Register');
-	                $message->from('connectthatapp@gmail.com','Admin');
+	                $message->from(env('MAIL_USERNAME'),'Admin');
 	            });
             } catch(\Exception $e){
-
+                //print_r($e->getMessage());
             }
+            //die();
             /************ Send email to Admin  ***********/
             
             return response()->json(['data' => $user,'message' => 'User is registered successfully.','status'=>$this-> successStatus],$this-> successStatus ); 
@@ -303,8 +305,6 @@ class UserController extends Controller
         $response = $user->save();
 
         return response()->json(['data' => $response,'message' => '','status'=>$this->successStatus],$this-> successStatus );                 
-    } 
-    
-
+    }
 
 }

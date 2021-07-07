@@ -102,6 +102,7 @@
 
 
 </body>
+<script src="{{ asset('js/custom.js') }}"></script>
 @yield('page-js-script')
 
 <script type="text/javascript">
@@ -113,5 +114,4 @@
 
     $('#summary-ckeditor').ckeditor();
 </script>
-
 </html>

@@ -135,7 +135,7 @@
     })(jQuery);
 
     var mySelect = $('#myRange');
-    if ({{ date('m') }}<= 6 && {{ date('d') }}<= 25){
+    /*if ({{ date('m') }}<= 6 && {{ date('d') }}<= 25){
         var startYear = {{(date('Y'))}};
     } else{
         var startYear = {{(date('Y'))+1}};
@@ -147,7 +147,8 @@
         mySelect.append(
             $('<option></option>').val((i-1) + "-" + i).html((i-1) + "-" + i)
         );
-    }
+    }*/
+    mySelect.html(jsGetYearList());
 
 
     $("select[name='yearFilter']").on("change",function () {

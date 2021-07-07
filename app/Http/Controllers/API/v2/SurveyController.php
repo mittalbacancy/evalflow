@@ -17,6 +17,7 @@ use App\Model\Survey;
 use Illuminate\Support\Facades\URL;
 use App\Model\SurveyEmailTemplate;
 use App\Model\SurveyType;
+use Mail;
 
 class SurveyController extends Controller
 {
@@ -99,7 +100,7 @@ class SurveyController extends Controller
      */
     public function surveyRequest(Request $request)
     {
-       if($request->survey_type_id == 1){
+       if($request->survey_type_id == 1 || $request->survey_type_id == 5){
         $validator = Validator::make($request->all(), [
             'survey_type_id' => 'required',
             'survey_id' => 'required',
@@ -158,8 +159,90 @@ class SurveyController extends Controller
         $surveyList = SurveyList::create($input);
         $surveyList['survey_qrcode'] = url('/QRcode/' . $qrimg);
         $surveyList['survey_type_id'] = $survey_type_id;
+        //$this->sendLink($surveyList->id);
+        if($request->action_type == 'sendLink'){           
+
+            $user_id_twillio =   $surveyList->user_id;            
+
+            $user_id_sms     =   $surveyList->requestby; 
+            $user_twillio  = DB::table('users')
+                              ->where('id',$user_id_twillio)
+                              ->first();
+
+            $user_name_sms = DB::table('users')
+                              ->where('id',$user_id_sms)
+                              ->first();
+
+            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';
+            $user_email_twillio = "mittal.parmar@bacancy.com";
+            $username = $user_name_sms->first_name.' '.$user_name_sms->last_name;   
+            $QRcodeurl = $surveyList->preview_url;         
+            if(!empty($user_email_twillio)){
+                 try{
+                    $data = array('QRcodeurl'=>$QRcodeurl,'username'=>$username);                
+                    Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio) {
+                        $message->to($user_email_twillio, '')->subject
+                            ('Survey Preview link details');
+                        $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
+                    });
+                }catch(\Exception $e){
+                    //return response()->json(['message' => $e->getMessage(), 'status' => 401], $this->successStatus);
+                }
+            }
+        }
+        
 
         return response()->json(['data' => $surveyList, 'message' => 'Survey Request submitted successfully', 'status' => $this->successStatus], $this->successStatus);
+    }
+    public function sendLink(Request $request){        
+        
+        $survey_id  = $request->get('survey_id');
+        try{
+            $surveyList = SurveyList::where('survey_id',$survey_id)->first();           
+            
+            if(!$surveyList){
+               return response()->json(['message' => 'No details found', 'status' => 401], $this->successStatus); 
+            }
+            if($surveyList->submitted == 1){
+                return response()->json(['message' => 'This survey evaluation has been submitted', 'status' => 401], $this->successStatus);
+            }
+            $survey_email_template = DB::table('survey_email_template')
+                              ->where('survey_name',$surveyList->survey_title)
+                              ->first();
+
+            if(!$survey_email_template){
+                return response()->json(['message' => 'No details found', 'status' => 401], $this->successStatus);
+            }
+            $user_id_twillio =   $surveyList->user_id;            
+
+            $user_id_sms         =   $surveyList->requestby; 
+            $user_twillio  = DB::table('users')
+                              ->where('id',$user_id_twillio)
+                              ->first();
+
+            $user_name_sms = DB::table('users')
+                              ->where('id',$user_id_sms)
+                              ->first();
+
+            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';
+
+            $username = $user_name_sms->first_name.' '.$user_name_sms->last_name;   
+            $QRcodeurl = $surveyList->preview_url;         
+            if(!empty($user_email_twillio)){
+                $data = array('QRcodeurl'=>$QRcodeurl,'username'=>$username);                
+                Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio) {
+                    $message->to($user_email_twillio, '')->subject
+                        ('Survey Preview link details');
+                    $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
+                });
+            }            
+ 
+            return response()->json(['message' => 'Mail sent successfully', 'status' => $this->successStatus], $this->successStatus);
+            
+        }catch(\Exception $e){
+            return response()->json(['message' => $e->getMessage(), 'status' => 401], $this->successStatus);
+        }
+        
     }
 
 
@@ -299,7 +382,7 @@ class SurveyController extends Controller
      */
     public function surveyList(Request $request)
     {
-         if (date('m') <= 06) {
+        /* if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
             if (date('d') <= 24) {
@@ -310,7 +393,9 @@ class SurveyController extends Controller
         }
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
         
         $response = SurveyEmailTemplate::whereBetween('created_at',[$start_yr,$end_yr])->get();
         if(!empty($response)){
@@ -333,7 +418,7 @@ class SurveyController extends Controller
     public function resiSelfRequest(Request $request)
     {
 
-         if (date('m') <= 06) {
+        /* if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
             if (date('d') <= 24) {
@@ -344,7 +429,9 @@ class SurveyController extends Controller
         }
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
 
         $input = $request->all();
         $id = $input['survey_type_id'];
@@ -372,7 +459,7 @@ class SurveyController extends Controller
 
     public function resiResidentRequest(Request $request)
     {
-         if (date('m') <= 06) {
+        /* if (date('m') <= 06) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
         } else {
             if (date('d') <= 24) {
@@ -383,7 +470,9 @@ class SurveyController extends Controller
         }
         $yrs = explode('-',$financial_year);
         $start_yr = "$yrs[0]-06-25";
-        $end_yr = "$yrs[1]-06-24";
+        $end_yr = "$yrs[1]-06-24";*/
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
 
         $input = $request->all();
         $id = $input['survey_type_id'];
@@ -503,6 +592,5 @@ class SurveyController extends Controller
     
      return response()->json(['Doc_resident_data' => $data, 'message' => 'get resident list successfully', 'status' => $this->successStatus], $this->successStatus);
     }
-
-
+    
 }

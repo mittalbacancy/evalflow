@@ -65,7 +65,15 @@
                 @endif
                     <i class="fa fa-user-md"></i> <span>Request Evaluation</span>
                 </a>
-            </li>  
+            </li> 
+            @if (Auth::user()->hasRole("ROLE_ADMIN"))
+            <li class="{{ (request()->segment(2) == 'reports') ? 'active' : '' }}">
+              <a href="{!! url('admin/reports') !!}">
+                    <i class="fa fa-bar-chart"></i> <span>Generate Reports</span>
+                </a>
+            </li>
+            @endif
+            
 
             @if (Auth::user()->hasRole("ROLE_ADMIN"))
             <li class="{{ (request()->segment(2) == 'surveylist') ? 'active' : '' }}">

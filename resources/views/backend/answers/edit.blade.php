@@ -1,9 +1,12 @@
 @extends('backend.layouts.app')
 
-
+<style type="text/css">
+.form-box-width {
+    width: 43px !important;
+}
+</style>
 
 @section('content')
-
 <div>
 
      <!-- Content Header (Page header) -->
@@ -90,7 +93,9 @@
                          
                           <select class="form-control" name="answer_type" id="selectType">
                                 <option <?php if ($answers['answer_type']=="radio") echo "selected";?> value="radio" >radio</option>                                
-                                <option <?php if ($answers['answer_type']=="textarea") echo "selected";?> value="textarea" >textarea</option>     
+                                <option <?php if ($answers['answer_type']=="textarea") echo "selected";?> value="textarea" >textarea</option>
+
+                                <option <?php if ($answers['answer_type']=="dropdown") echo "selected";?> value="dropdown" >dropdown</option>     
                           </select>
                         </div>  
 
@@ -240,9 +245,90 @@
                         </div>
                         @endif
                         </div>
- 
-
-                        <button type="submit" class="btn btn-primary">Update</button>
+                        @if($answers['answer_type'] == "dropdown")
+                        <?php
+                        $dd_options_cnt = 1;
+                        ?> 
+                          
+                        <div class="form-group" id="dropdown_type" style="display: block;">
+                          @if(!empty($answers->dd_options))
+                          @foreach($answers->dd_options as $dd_options) 
+                            <div class="form-group" id="option_div_{{$dd_options_cnt}}">
+                              <a class="pull-right delete_optionDiv" style="color:red;"><i class="fa fa-trash fa-3x"></i></a>
+                              <label for="option_{{$dd_options_cnt}}">Option:</label> 
+                              <input type="text" name="options[]" value="{{$dd_options}}" class="form-control">
+                                @if(!empty($milestone_code)) 
+                                <div class="form-check">
+                                  <label for="active">Select Code: </label>
+                                  <div class="miValue">
+                                    @foreach($milestone_code as $value)
+                                      @if($value['survey_m_code'] == 'MK1' || $value['survey_m_code'] == 'PC1' || $value['survey_m_code'] == 'SBP1' || $value['survey_m_code'] == 'PBLI1' || $value['survey_m_code'] == 'PROF1' || $value['survey_m_code'] == 'ICS1')
+                                      <div class="mr-10">
+                                      @endif
+                                        <div class="mb-10">
+                                          @php
+                                            $codeId1 = $value['survey_m_code'];
+                                            $code_key = $dd_code_key[$dd_options_cnt-1]['option_'.$dd_options_cnt][$value['survey_m_code']] ?? '';
+                                          @endphp 
+                                          <input type="checkbox" {{!empty($code_key) ? 'checked' : '' }}  name="survey_code_{{$dd_options_cnt}}[]" class="form-check-input"  value="{{ $value['id'] }}"> {{ $value['survey_m_code'] }}
+                                          <input type="number" name="survey_value_{{$dd_options_cnt}}_[{{$codeId1}}]" class="form-box-width" min="1" value="{{$code_key}}">
+                                        </div>
+                                      @if($value['survey_m_code'] == 'MK3' || $value['survey_m_code'] == 'PC5' || $value['survey_m_code'] == 'SBP3' || $value['survey_m_code'] == 'PBLI2' || $value['survey_m_code'] == 'PROF4' || $value['survey_m_code'] == 'ICS3')
+                                      </div>
+                                      @endif
+                                    @endforeach
+                                  </div>
+                                </div>
+                                @endif
+                            </div>
+                            <?php
+                              $dd_options_cnt++;
+                            ?>   
+                          @endforeach
+                          @else
+                            <div class="form-group" id="option_div_{{$dd_options_cnt}}">
+                              <label for="option_{{$dd_options_cnt}}">Option:</label> 
+                              <input type="text" name="options[]" value="" class="form-control"> 
+                              <div class="form-check">
+                                  <label for="active">Select Code: </label>
+                                  <div class="miValue">
+                                  @foreach($milestone_code as $value)
+                                    @if($value['survey_m_code'] == 'MK1' || $value['survey_m_code'] == 'PC1' || $value['survey_m_code'] == 'SBP1' || $value['survey_m_code'] == 'PBLI1' || $value['survey_m_code'] == 'PROF1' || $value['survey_m_code'] == 'ICS1')
+                                    <div class="mr-10">
+                                    @endif
+                                      <div class="mb-10">
+                                        @php
+                                          $codeId1 = $value['survey_m_code'];
+                                        @endphp 
+                                        <input type="checkbox"  name="survey_code_{{$dd_options_cnt}}[]" class="form-check-input"  value="{{ $value['id'] }}"> {{ $value['survey_m_code'] }}
+                                        <input type="number" name="survey_value_{{$dd_options_cnt}}_[{{$codeId1}}]" class="form-box-width" min="1">
+                                      </div>
+                                    @if($value['survey_m_code'] == 'MK3' || $value['survey_m_code'] == 'PC5' || $value['survey_m_code'] == 'SBP3' || $value['survey_m_code'] == 'PBLI2' || $value['survey_m_code'] == 'PROF4' || $value['survey_m_code'] == 'ICS3')
+                                    </div>
+                                    @endif
+                                  @endforeach
+                                  </div>
+                                 </div>
+                            </div>
+                          @endif
+                          <?php
+                              $dd_options_cnt=count($answers->dd_options);
+                              $survey_val_arr = [];
+                              if($dd_options_cnt > 0){
+                                foreach ($answers->dd_options as $key => $value) {
+                                  array_push($survey_val_arr,$key+1);
+                                }                                
+                              }
+                          ?>
+                            <div class="dropdown_type_add">
+                              
+                            </div>
+                            <input type="hidden" id="survey_val_arr" name="survey_val_arr" value="{{implode(',',$survey_val_arr)}}">
+                            <a class="btn btn-primary pull-right addMoreOption">Add More</a>
+                            <br>
+                        </div>                                                  
+                        @endif
+                      <button type="submit" class="btn btn-primary">Update</button>
                     </form>
                 </div>
             </div>
@@ -366,7 +452,6 @@ $(window).on("load", function () {
          
          
 });
-
 $("select[name='answer_type']").change(function(){
    var ansOptionValue = $("#selectType").val();
     // alert(ansOptionValue);
@@ -374,22 +459,99 @@ $("select[name='answer_type']").change(function(){
    if(ansOptionValue == "radio"){
          document.getElementById("radio_type").style.display = "";
          document.getElementById("textarea_type").style.display = "none";
+         document.getElementById("dropdown_type").style.display = "none";
         
     }
     else if(ansOptionValue == "textarea"){
          document.getElementById("radio_type").style.display = "none";
          document.getElementById("textarea_type").style.display = "";
+         document.getElementById("dropdown_type").style.display = "none";
+        
+     }
+     else if(ansOptionValue == "dropdown"){
+         document.getElementById("radio_type").style.display = "none";
+         document.getElementById("textarea_type").style.display = "none";
+         document.getElementById("dropdown_type").style.display = "";
         
      }
     else{
          document.getElementById("radio_type").style.display = "none";
          document.getElementById("textarea_type").style.display = "none";
+         document.getElementById("dropdown_type").style.display = "none";
       
      }  
 
 });
+</script>
+{{-- @endsection --}}
+@section('page-js-script') 
+<script type="text/javascript"> 
 
+
+var  dd_options_cnt = parseInt('{{$dd_options_cnt ?? 0}}');
+$(".addMoreOption").on('click',function(){
+  dd_options_cnt++;
+  if(($('#survey_val_arr').val()).length > 0){
+    $('#survey_val_arr').val($('#survey_val_arr').val()+','+dd_options_cnt);
+  }else{
+    $('#survey_val_arr').val(dd_options_cnt);
+  }
+  
+  //var div_count = $('.option_div_add_more').length; 
+  //console.log(div_count);
+  var text = '{{json_encode($milestone_code)}}';
+  var milestone_code = text.replace(/&quot;/g, '\"');  
+  //console.log(milestone_code);
+  milestone_code = JSON.parse(milestone_code);
+  //console.log(milestone_code);
+  var addDiv = '';
+   addDiv +=
+    '<div class="form-group option_div_add_more" id="option_div_'+dd_options_cnt+'">'+
+      '<a class="pull-right delete_optionDiv" style="color:red;"><i class="fa fa-trash fa-3x"></i></a>'+
+      '<label for="option_'+dd_options_cnt+'">Option:</label>'+       
+      '<input type="text" name="options[]" value="" class="form-control"> '+
+        '<div class="form-check">'+
+          '<label for="active">Select Code: </label>'+
+          '<div class="miValue">';
+
+            var i;            
+            for (i = 0; i < milestone_code.length; i++) {             
+              var value = milestone_code[i];              
+              if(value['survey_m_code'] == 'MK1' || value['survey_m_code'] == 'PC1' || value['survey_m_code'] == 'SBP1' || value['survey_m_code'] == 'PBLI1' || value['survey_m_code'] == 'PROF1' || value['survey_m_code'] == 'ICS1')
+              {
+                addDiv += '<div class="mr-10">';
+              }
+              var codeId1 = value['survey_m_code'];
+              console.log("codeId1="+codeId1);
+              addDiv +=
+                '<div class="mb-10">'+                
+                  '<input type="checkbox"  name="survey_code_'+dd_options_cnt+'[]" class="form-check-input"  value="'+value['id']+'"> '+value['survey_m_code']+
+                  ' <input type="number" name="survey_value_'+dd_options_cnt+'_['+codeId1+']" class="form-box-width" min="1">'+
+                '</div>';
+              if(value['survey_m_code'] == 'MK3' || value['survey_m_code'] == 'PC5' || value['survey_m_code'] == 'SBP3' || value['survey_m_code'] == 'PBLI2' || value['survey_m_code'] == 'PROF4' || value['survey_m_code'] == 'ICS3'){
+                addDiv +=
+                '</div>';
+              }
+            }          
+            addDiv +=
+          '</div>'+
+        '</div>'+
+    '</div>';
+
+    $('.dropdown_type_add').append(addDiv);
+});
+$('body').on('click','.delete_optionDiv',function(){
+  confirm('Are you sure you want to remove this option?');
+  var removeCnt = $(this).parent().attr('id').replace('option_div_','').trim();
+  values = $('#survey_val_arr').val().split(',');
+  var index = values.indexOf(removeCnt);
+  if(index >= 0) {
+      values.splice(index, 1);
+  }
+  $('#survey_val_arr').val(values.join(','));
+  $(this).parent().remove();
+})
         
 
 </script>
-{{-- @endsection --}}
+@endsection

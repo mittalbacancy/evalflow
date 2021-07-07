@@ -15,15 +15,17 @@ use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
 class SignupActivate extends Notification
 {
     use Queueable;
+    protected $pass;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($user)
+    public function __construct($user,$pass)
     {
         $this->user = $user;
+        $this->pass = $pass;
     }
 
     /**
@@ -45,14 +47,17 @@ class SignupActivate extends Notification
      */
     public function toMail($notifiable)
     {
+        
         $emailtemp = EmailTemplate::where('id',1)->get()->toArray();
         //print_r($emailtemp[0]['subject']);die;
 
         $url = url('/api/auth/signup/activate/'.$notifiable->activation_token);
 
         return (new MailMessage)
-            ->subject($emailtemp[0]['subject'])
+            ->subject($emailtemp[0]['subject'])            
             ->line(new HtmlString($emailtemp[0]['content']))
+            ->line('User Name : '.$this->user->email)
+            ->line('Password : '.$this->pass)            
             //->action('Confirm Account', url($url))
             ->line('Thank you for using our application!');
 

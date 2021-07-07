@@ -440,6 +440,72 @@ $("select[name='survey_type']").on("change",function () {
             
         });
 
+    }else if(surveyTypeID == 5){
+        $("#doctor_section").hide();
+        $("#send_sms_section").hide();
+    
+        $.ajax({
+            url: "{{route('add_survey_name')}}",
+            type: 'POST',
+            dataType: 'json',
+            data: {'id':surveyTypeID},
+            success: function(data) {
+
+
+            //survey name
+                $('select[name="survey_name"]').empty();
+                 $('select[name="survey_name"]').append('<option id="survey_name" value="">'+ "Select" +'</option>');
+                for (var i = 0; i < data.data.survey_type.length; i++) {
+
+                     $('select[name="survey_name"]').append('<option value="'+ data.data.survey_type[i].id +'">'+ data.data.survey_type[i].survey_name +'</option>');
+                }
+
+            // resident list
+                $('select[name="resident_list"]').empty();
+                 $('select[name="resident_list"]').append('<option id="resident_list" value="">'+ "Select" +'</option>');
+                for (var i = 0; i < data.data.self_resident_list.length; i++) {
+                     $('select[name="resident_list"]').append('<option value="'+ data.data.self_resident_list[i].id +'">'+ data.data.self_resident_list[i].first_name +' '+ data.data.self_resident_list[i].last_name +'</option>');
+                }
+                
+             }
+            
+        });
+    }
+    else if (surveyTypeID == 51){
+       $("#doctor_section").show();
+       $("#send_sms_section").hide();
+       $("#doctor_list").hide();
+       $("#resident_list").text('Resident List:');
+
+            $.ajax({
+            url: "{{route('add_survey_name')}}",
+            type: 'POST',
+            dataType: 'json',
+            data: {'id':surveyTypeID},
+            success: function(data) {
+
+            //survey name
+                $('select[name="survey_name"]').empty();
+                 $('select[name="survey_name"]').append('<option id="survey_name" value="">'+ "Select" +'</option>');
+                for (var i = 0; i < data.data.survey_type.length; i++) {
+
+                     $('select[name="survey_name"]').append('<option value="'+ data.data.survey_type[i].id +'">'+ data.data.survey_type[i].survey_name +'</option>');
+                }
+
+
+            //Resident name
+                $('select[name="doctor_list"]').empty();
+                $('select[name="doctor_list"]').append('<option id="doctor_list" value="">'+ "Select" +'</option>');
+                for (var i = 0; i < data.data.self_resident_list.length; i++) {
+
+                     $('select[name="doctor_list"]').append('<option value="'+ data.data.self_resident_list[i].id +'">'+ data.data.self_resident_list[i].first_name +' '+ data.data.self_resident_list[i].last_name +'</option>');
+                }
+
+                         
+             }
+            
+        });
+
     }
     else{
         $('select[name="survey_name"]').empty();
