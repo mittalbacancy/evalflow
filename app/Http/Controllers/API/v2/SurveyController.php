@@ -173,8 +173,7 @@ class SurveyController extends Controller
                               ->where('id',$user_id_sms)
                               ->first();
 
-            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';
-            $user_email_twillio = "mittal.parmar@bacancy.com";
+            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';            
             $username = $user_name_sms->first_name.' '.$user_name_sms->last_name;   
             $QRcodeurl = $surveyList->preview_url;         
             if(!empty($user_email_twillio)){
@@ -182,7 +181,7 @@ class SurveyController extends Controller
                     $data = array('QRcodeurl'=>$QRcodeurl,'username'=>$username);                
                     Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio) {
                         $message->to($user_email_twillio, '')->subject
-                            ('Survey Preview link details');
+                            ('Resident Evaluation Link');
                         $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
                     });
                 }catch(\Exception $e){

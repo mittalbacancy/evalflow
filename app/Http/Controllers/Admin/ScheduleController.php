@@ -34,8 +34,9 @@ class ScheduleController extends Controller
      */
     public function index()
     {       
-        
-        $schedule = ShiftSchedule::all();
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
+        $schedule = ShiftSchedule::whereBetween('created_at',[$start_yr,$end_yr])->get();
 
         return view('backend.schedule.index', compact('schedule'));
     }

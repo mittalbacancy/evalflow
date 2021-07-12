@@ -146,7 +146,7 @@ class GloballyController extends Controller
         $validator = Validator::make($request->all(), $rules);
         
         if ($validator->fails()) {
-             //Log::channel('survey')->info('Validation Error=='.json_encode($validator));
+             Log::channel('survey')->info('Validation Error=='.json_encode($validator));
             return Redirect::back()->withErrors($validator)->withInput($request->all());
         }
         
@@ -156,8 +156,8 @@ class GloballyController extends Controller
         }
 
         $answer_type = $request->get('answer_type');
-        //Log::channel('survey')->info("\n");
-        //Log::channel('survey')->info('START surveySubmit---'.Carbon::now());
+        Log::channel('survey')->info("\n");
+        Log::channel('survey')->info('START surveySubmit---'.Carbon::now());
         $survey_track = DB::table('survey_lists')
                         ->leftjoin('users as doctor', 'survey_lists.user_id', '=', 'doctor.id')
                         ->join('users', 'survey_lists.requestby', '=', 'users.id')
@@ -167,7 +167,7 @@ class GloballyController extends Controller
 
         if (!empty($survey_track) && $survey_track[0]->submitted == '0') {
             
-            //Log::channel('survey')->info('IF---168');
+            Log::channel('survey')->info('IF---168');
 
             $survey_answer = array();
             $tempCodes = array();
@@ -240,7 +240,7 @@ class GloballyController extends Controller
             }
 
             if ($surveytypeidcheck->sur_type_id == 2) {
-                //Log::channel('survey')->info('IF---209 -- surveytypeidcheck->sur_type_id == 2');
+                Log::channel('survey')->info('IF---209 -- surveytypeidcheck->sur_type_id == 2');
                 /************ Send email to Resident and Admin ***********/
                 $data['title'] = "Evaluation submitted by Dr." . '' . $survey_track[0]->doctor_first_name . ' ' . $survey_track[0]->doctor_last_name;
                 $data['doctoremail'] = $survey_track[0]->doctor_email;
@@ -248,9 +248,9 @@ class GloballyController extends Controller
                 $data['residentname'] =  $survey_track[0]->first_name;
                 $data['survey_title'] =  $survey_track[0]->survey_title;
                 $data['survey_url'] =  $survey_track[0]->preview_url;
-                $user_email = 'shrutipatel@bacancytechnology.com';
+                //$user_email = 'shrutipatel@bacancytechnology.com';
                 $subject = "Evaluation submitted by Dr." . '' . $survey_track[0]->doctor_first_name . ' ' . $survey_track[0]->doctor_last_name;
-                //$user_email = $survey_track[0]->email;
+                $user_email = $survey_track[0]->email;
 
 
                 // Mail::send('survey_email_resident', $data, function ($message) use ($user_email,$subject) {
@@ -296,7 +296,7 @@ class GloballyController extends Controller
                 $update_submitted = SurveyList::where('urlcode', $segment2)->update($updated_data);
                 return \Redirect::route('surveypreview', [$segment2])->with('message', 'Survey submitted successfully.');
             } else {
-                 //Log::channel('survey')->info('else---265 -- surveytypeidcheck->sur_type_id != 2');      
+                 Log::channel('survey')->info('else---265 -- surveytypeidcheck->sur_type_id != 2');      
                 // decode codes values
                 $newCode = array();
                 foreach ($tempCodes as $key => $value) {
@@ -320,7 +320,7 @@ class GloballyController extends Controller
                 $resident_id = DB::table('survey_lists')->where('urlcode', $segment2)->pluck('requestby')->first();
                 
 
-                if (date('m') <= 06) {
+                /*if (date('m') <= 06) {
                     $financial_year = (date('Y')-1) . '-' . date('Y');
                 } else {
                     if (date('d') <= 24) {
@@ -328,7 +328,7 @@ class GloballyController extends Controller
                     } else {
                         $financial_year = date('Y') . '-' . (date('Y') + 1);
                     }
-                }
+                }*/
 
                 /*if (date('m') <= 06 && date('d') <= 24) {
                     $financial_year = (date('Y') - 1) . '-' . date('Y');
@@ -336,33 +336,35 @@ class GloballyController extends Controller
                 } else {
                     $financial_year = date('Y') . '-' . (date('Y') + 1);
                     // echo($financial_year);   
-                }*/
+                }
                 
                 //dd($financial_year);
-                /*$yrs = explode('-',$financial_year);
+                $yrs = explode('-',$financial_year);
                 $start_yr = Carbon::parse("$yrs[0]-06-25")->format('Y-m-d');
                 $end_yr = Carbon::parse("$yrs[1]-06-24")->format('Y-m-d');*/
                 $start_yr = Carbon::parse(getFinancialStartDate())->format('Y-m-d');
                 $end_yr   = Carbon::parse(getFinancialEndDate())->format('Y-m-d');
                 
                 //echo $start_yr."-".$end_yr;  
-                //Log::channel('survey')->info('checking date range--->'.$start_yr."=======".$end_yr);
-                //Log::channel('survey')->info('resident_id =='.$resident_id);
-                //\DB::enableQueryLog();
+                Log::channel('survey')->info('checking date range--->'.$start_yr."=======".$end_yr);
+                Log::channel('survey')->info('resident_id =='.$resident_id);
+                \DB::enableQueryLog();
                 $find_resident_in_eval = EvaluationCalculation::where('resident_id', $resident_id)
                          //->whereBetween('created_at',[$start_yr,$end_yr])                           
                             ->where(function($q) use ($start_yr, $end_yr){
-                                $q->whereBetween(\DB::raw('DATE(created_at)'), array($start_yr, $end_yr));
+                                /*$q->whereBetween(\DB::raw('DATE(created_at)'), array($start_yr, $end_yr));*/
+                                $q->whereDate('created_at','>=',$start_yr)->whereDate('created_at','<=',$end_yr);
+
                             })                            
                            ->get();
                 //select * from `evaluation_calculation` where `resident_id` = 135 and (DATE_FORMAT(created_at,'%Y-%m-%d') >= '2021-06-25' and DATE_FORMAT(created_at,'%Y-%m-%d') <= '2022-06-24')
                 //echo count($find_resident_in_eval);
                 //echo "here";exit;
-                //Log::channel('survey')->info('Query=='.json_encode(\DB::getQueryLog()));
+                Log::channel('survey')->info('Query=='.json_encode(\DB::getQueryLog()));
                 if(count($find_resident_in_eval) > 0){   
 
-                    //Log::channel('survey')->info('find_resident_in_eval > 0');
-                    //Log::channel('survey')->info('find_resident_in_eval id ==='.$find_resident_in_eval[0]['id']);
+                    Log::channel('survey')->info('find_resident_in_eval > 0');
+                    Log::channel('survey')->info('find_resident_in_eval id ==='.$find_resident_in_eval[0]['id']);
 
                     $PC1 = array_key_exists("PC1",$mergedCode) ? $mergedCode['PC1']+$find_resident_in_eval[0]['PC1'] : $find_resident_in_eval[0]['PC1'];
                     $PC2 = array_key_exists("PC2",$mergedCode) ? $mergedCode['PC2']+$find_resident_in_eval[0]['PC2'] : $find_resident_in_eval[0]['PC2'];
@@ -409,62 +411,70 @@ class GloballyController extends Controller
                     $count_ICS3 = array_key_exists("ICS3",$count_vals) ? $count_vals['ICS3'] + $find_resident_in_eval[0]['count_ICS3']: $find_resident_in_eval[0]['count_ICS3'];
 
                     //echo $find_resident_in_eval[0]['id'];
-                    //Log::channel('survey')->info('Executing update query::'.Carbon::now());
+                    Log::channel('survey')->info('Executing update query::'.Carbon::now());
                     EvaluationCalculation::where('resident_id', $resident_id)->where('id', $find_resident_in_eval[0]['id'])->update(['PC1' => $PC1,'PC2' => $PC2,'PC3' => $PC3,'PC4' => $PC4,'PC5' => $PC5,'MK1' => $MK1,'MK2' => $MK2,'MK3' => $MK3,'SBP1' => $SBP1,'SBP2' => $SBP2,'SBP3' => $SBP3,'PBLI1' => $PBLI1,'PBLI2' => $PBLI2, 'PROF1' => $PROF1,'PROF2' => $PROF2,'PROF3' => $PROF3,'PROF4' => $PROF4,'ICS1' => $ICS1,'ICS2' => $ICS2,'ICS3' => $ICS3, 'count_PC1' => $count_PC1, 'count_PC2' => $count_PC2, 'count_PC3' => $count_PC3, 'count_PC4' => $count_PC4, 'count_PC5' => $count_PC5, 'count_MK1' => $count_MK1, 'count_MK2' => $count_MK2, 'count_MK3' => $count_MK3, 'count_SBP1' => $count_SBP1, 'count_SBP2' => $count_SBP2, 'count_SBP3' => $count_SBP3, 'count_PBLI1' => $count_PBLI1, 'count_PBLI2' => $count_PBLI2, 'count_PROF1' => $count_PROF1, 'count_PROF2' => $count_PROF2, 'count_PROF3' => $count_PROF3, 'count_PROF4' => $count_PROF4, 'count_ICS1' => $count_ICS1, 'count_ICS2' => $count_ICS2, 'count_ICS3' => $count_ICS3,'updated_at' => Carbon::now()]);
                 }else{
-                   //insert 
+                    //insert 
                     // echo "add";
                     // dd($mergedCode);
-                    //Log::channel('survey')->info('else--new evaluation calculation entry');
-                    //Log::channel('survey')->info('resident_id='.$resident_id);
-                    $evaluation = new EvaluationCalculation([
-                        'resident_id' => $resident_id,
-                        'PC1' => array_key_exists("PC1",$mergedCode) ?  $mergedCode['PC1'] : 0 ,
-                        'PC2' => array_key_exists("PC2",$mergedCode) ?  $mergedCode['PC2'] : 0,
-                        'PC3' => array_key_exists("PC3",$mergedCode) ?  $mergedCode['PC3'] : 0,
-                        'PC4' => array_key_exists("PC4",$mergedCode) ?  $mergedCode['PC4'] : 0,
-                        'PC5' => array_key_exists("PC5",$mergedCode) ?  $mergedCode['PC5'] : 0,
-                        'MK1' => array_key_exists("MK1",$mergedCode) ?  $mergedCode['MK1'] : 0,
-                        'MK2' => array_key_exists("MK2",$mergedCode) ?  $mergedCode['MK2'] : 0,
-                        'MK3' => array_key_exists("MK3",$mergedCode) ?  $mergedCode['MK3'] : 0,
-                        'SBP1' => array_key_exists("SBP1",$mergedCode) ?  $mergedCode['SBP1'] : 0,
-                        'SBP2' => array_key_exists("SBP2",$mergedCode) ?  $mergedCode['SBP2'] : 0,
-                        'SBP3' => array_key_exists("SBP3",$mergedCode) ?  $mergedCode['SBP3'] : 0,
-                        'PBLI1' => array_key_exists("PBLI1",$mergedCode) ?  $mergedCode['PBLI1'] : 0,
-                        'PBLI2' => array_key_exists("PBLI2",$mergedCode) ?  $mergedCode['PBLI2'] : 0,
-                        'PROF1' => array_key_exists("PROF1",$mergedCode) ?  $mergedCode['PROF1'] : 0,
-                        'PROF2' => array_key_exists("PROF2",$mergedCode) ?  $mergedCode['PROF2'] : 0,
-                        'PROF3' => array_key_exists("PROF3",$mergedCode) ?  $mergedCode['PROF3'] : 0,
-                        'PROF4' => array_key_exists("PROF4",$mergedCode) ?  $mergedCode['PROF4'] : 0,
-                        'ICS1' => array_key_exists("ICS1",$mergedCode) ?  $mergedCode['ICS1'] : 0,
-                        'ICS2' => array_key_exists("ICS2",$mergedCode) ?  $mergedCode['ICS2'] : 0,
-                        'ICS3' => array_key_exists("ICS3",$mergedCode) ?  $mergedCode['ICS3'] : 0,
-                        
-                        'count_PC1' => array_key_exists("PC1",$count_vals) ?  $count_vals['PC1'] : 0 ,
-                        'count_PC2' => array_key_exists("PC2",$count_vals) ?  $count_vals['PC2'] : 0,
-                        'count_PC3' => array_key_exists("PC3",$count_vals) ?  $count_vals['PC3'] : 0,
-                        'count_PC4' => array_key_exists("PC4",$count_vals) ?  $count_vals['PC4'] : 0,
-                        'count_PC5' => array_key_exists("PC5",$count_vals) ?  $count_vals['PC5'] : 0,
-                        'count_MK1' => array_key_exists("MK1",$count_vals) ?  $count_vals['MK1'] : 0,
-                        'count_MK2' => array_key_exists("MK2",$count_vals) ?  $count_vals['MK2'] : 0,
-                        'count_MK3' => array_key_exists("MK3",$count_vals) ?  $count_vals['MK3'] : 0,
-                        'count_SBP1' => array_key_exists("SBP1",$count_vals) ?  $count_vals['SBP1'] : 0,
-                        'count_SBP2' => array_key_exists("SBP2",$count_vals) ?  $count_vals['SBP2'] : 0,
-                        'count_SBP3' => array_key_exists("SBP3",$count_vals) ?  $count_vals['SBP3'] : 0,
-                        'count_PBLI1' => array_key_exists("PBLI1",$count_vals) ?  $count_vals['PBLI1'] : 0,
-                        'count_PBLI2' => array_key_exists("PBLI2",$count_vals) ?  $count_vals['PBLI2'] : 0,
-                        'count_PROF1' => array_key_exists("PROF1",$count_vals) ?  $count_vals['PROF1'] : 0,
-                        'count_PROF2' => array_key_exists("PROF2",$count_vals) ?  $count_vals['PROF2'] : 0,
-                        'count_PROF3' => array_key_exists("PROF3",$count_vals) ?  $count_vals['PROF3'] : 0,
-                        'count_PROF4' => array_key_exists("PROF4",$count_vals) ?  $count_vals['PROF4'] : 0,
-                        'count_ICS1' => array_key_exists("ICS1",$count_vals) ?  $count_vals['ICS1'] : 0,
-                        'count_ICS2' => array_key_exists("ICS2",$count_vals) ?  $count_vals['ICS2'] : 0,
-                        'count_ICS3' => array_key_exists("ICS3",$count_vals) ?  $count_vals['ICS3'] : 0,
-                        'created_at' => Carbon::now(),         
-                        'updated_at' => Carbon::now(),
-                        
-                    ]);
-                    $evaluation->save();
+                    Log::channel('survey')->info('else--new evaluation calculation entry');
+                    Log::channel('survey')->info('resident_id='.$resident_id);
+                    $start_yr = Carbon::parse(getFinancialStartDate())->format('Y-m-d');
+                    $end_yr   = Carbon::parse(getFinancialEndDate())->format('Y-m-d');
+                    $find_resident_in_eval = EvaluationCalculation::where('resident_id', $resident_id)
+                                ->where(function($q) use ($start_yr, $end_yr){                                
+                                    $q->whereDate('created_at','>=',$start_yr)->whereDate('created_at','<=',$end_yr);
+                                })->get();
+                    if(count($find_resident_in_eval) == 0){
+                        $evaluation = new EvaluationCalculation([
+                            'resident_id' => $resident_id,
+                            'PC1' => array_key_exists("PC1",$mergedCode) ?  $mergedCode['PC1'] : 0 ,
+                            'PC2' => array_key_exists("PC2",$mergedCode) ?  $mergedCode['PC2'] : 0,
+                            'PC3' => array_key_exists("PC3",$mergedCode) ?  $mergedCode['PC3'] : 0,
+                            'PC4' => array_key_exists("PC4",$mergedCode) ?  $mergedCode['PC4'] : 0,
+                            'PC5' => array_key_exists("PC5",$mergedCode) ?  $mergedCode['PC5'] : 0,
+                            'MK1' => array_key_exists("MK1",$mergedCode) ?  $mergedCode['MK1'] : 0,
+                            'MK2' => array_key_exists("MK2",$mergedCode) ?  $mergedCode['MK2'] : 0,
+                            'MK3' => array_key_exists("MK3",$mergedCode) ?  $mergedCode['MK3'] : 0,
+                            'SBP1' => array_key_exists("SBP1",$mergedCode) ?  $mergedCode['SBP1'] : 0,
+                            'SBP2' => array_key_exists("SBP2",$mergedCode) ?  $mergedCode['SBP2'] : 0,
+                            'SBP3' => array_key_exists("SBP3",$mergedCode) ?  $mergedCode['SBP3'] : 0,
+                            'PBLI1' => array_key_exists("PBLI1",$mergedCode) ?  $mergedCode['PBLI1'] : 0,
+                            'PBLI2' => array_key_exists("PBLI2",$mergedCode) ?  $mergedCode['PBLI2'] : 0,
+                            'PROF1' => array_key_exists("PROF1",$mergedCode) ?  $mergedCode['PROF1'] : 0,
+                            'PROF2' => array_key_exists("PROF2",$mergedCode) ?  $mergedCode['PROF2'] : 0,
+                            'PROF3' => array_key_exists("PROF3",$mergedCode) ?  $mergedCode['PROF3'] : 0,
+                            'PROF4' => array_key_exists("PROF4",$mergedCode) ?  $mergedCode['PROF4'] : 0,
+                            'ICS1' => array_key_exists("ICS1",$mergedCode) ?  $mergedCode['ICS1'] : 0,
+                            'ICS2' => array_key_exists("ICS2",$mergedCode) ?  $mergedCode['ICS2'] : 0,
+                            'ICS3' => array_key_exists("ICS3",$mergedCode) ?  $mergedCode['ICS3'] : 0,
+                            
+                            'count_PC1' => array_key_exists("PC1",$count_vals) ?  $count_vals['PC1'] : 0 ,
+                            'count_PC2' => array_key_exists("PC2",$count_vals) ?  $count_vals['PC2'] : 0,
+                            'count_PC3' => array_key_exists("PC3",$count_vals) ?  $count_vals['PC3'] : 0,
+                            'count_PC4' => array_key_exists("PC4",$count_vals) ?  $count_vals['PC4'] : 0,
+                            'count_PC5' => array_key_exists("PC5",$count_vals) ?  $count_vals['PC5'] : 0,
+                            'count_MK1' => array_key_exists("MK1",$count_vals) ?  $count_vals['MK1'] : 0,
+                            'count_MK2' => array_key_exists("MK2",$count_vals) ?  $count_vals['MK2'] : 0,
+                            'count_MK3' => array_key_exists("MK3",$count_vals) ?  $count_vals['MK3'] : 0,
+                            'count_SBP1' => array_key_exists("SBP1",$count_vals) ?  $count_vals['SBP1'] : 0,
+                            'count_SBP2' => array_key_exists("SBP2",$count_vals) ?  $count_vals['SBP2'] : 0,
+                            'count_SBP3' => array_key_exists("SBP3",$count_vals) ?  $count_vals['SBP3'] : 0,
+                            'count_PBLI1' => array_key_exists("PBLI1",$count_vals) ?  $count_vals['PBLI1'] : 0,
+                            'count_PBLI2' => array_key_exists("PBLI2",$count_vals) ?  $count_vals['PBLI2'] : 0,
+                            'count_PROF1' => array_key_exists("PROF1",$count_vals) ?  $count_vals['PROF1'] : 0,
+                            'count_PROF2' => array_key_exists("PROF2",$count_vals) ?  $count_vals['PROF2'] : 0,
+                            'count_PROF3' => array_key_exists("PROF3",$count_vals) ?  $count_vals['PROF3'] : 0,
+                            'count_PROF4' => array_key_exists("PROF4",$count_vals) ?  $count_vals['PROF4'] : 0,
+                            'count_ICS1' => array_key_exists("ICS1",$count_vals) ?  $count_vals['ICS1'] : 0,
+                            'count_ICS2' => array_key_exists("ICS2",$count_vals) ?  $count_vals['ICS2'] : 0,
+                            'count_ICS3' => array_key_exists("ICS3",$count_vals) ?  $count_vals['ICS3'] : 0,
+                            'created_at' => Carbon::now(),         
+                            'updated_at' => Carbon::now(),
+                            
+                        ]);
+                        $evaluation->save();
+                    }
                 }
           
 
@@ -526,7 +536,7 @@ class GloballyController extends Controller
                 SurveyAnswer::insert($survey_answer);
                 $updated_data = array('submitted' => '1');
                 $update_submitted = SurveyList::where('urlcode', $segment2)->update($updated_data);
-                //Log::channel('survey')->info('End OF process=='.Carbon::now()."\n");
+                Log::channel('survey')->info('End OF process=='.Carbon::now()."\n");
 
                 return \Redirect::route('surveypreview', [$segment2])->with('message', 'Survey submitted successfully.');
             }

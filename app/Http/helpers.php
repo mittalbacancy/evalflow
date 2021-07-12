@@ -12,7 +12,7 @@ function setConfig($configEmail){
     \Artisan::call('config:cache');        
 }
 function getFinancialYear(){
-    if (date('m') <= 06 && date('d') <= 25) {
+    if (date('m') <= 06 && date('d') <= 24) {
         $financial_year = (date('Y')-1) . '-' . date('Y');
     } else {                    
         $financial_year = date('Y') . '-' . (date('Y') + 1);
@@ -20,18 +20,18 @@ function getFinancialYear(){
     return $financial_year;
 }
 function getFinancialStartDate(){
-    if (date('m') <= 06 && date('d') <= 25) {
+    if (date('m') <= 06 && date('d') <= 24) {
         $financial_year = (date('Y')-1) . '-' . date('Y');
     } else {                    
         $financial_year = date('Y') . '-' . (date('Y') + 1);
-    }
+    }    
     $yrs = explode('-',$financial_year);
     $start_yr = "$yrs[0]-06-25";   
     //dd($start_yr); 
     return $start_yr;
 }
 function getFinancialEndDate(){
-    if (date('m') <= 06 && date('d') <= 25) {
+    if (date('m') <= 06 && date('d') <= 24) {
         $financial_year = (date('Y')-1) . '-' . date('Y');
     } else {                    
         $financial_year = date('Y') . '-' . (date('Y') + 1);

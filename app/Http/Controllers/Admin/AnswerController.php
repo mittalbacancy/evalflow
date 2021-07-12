@@ -196,10 +196,10 @@ class AnswerController extends Controller
             $answers->code2 = $survey_value2;
             $answers->code3 = $survey_value3;
             $answers->code4 = $survey_value4; 
-         $answers->dd_options = NULL;
-         $answers->dd_code = NULL;
+            $answers->dd_options = NULL;
+            $answers->dd_code = NULL;
         }
-        if($answers->answer_type == 'dropdown'){ 
+        else if($answers->answer_type == 'dropdown'){ 
             //dd($request->all());    
             $options = $request->get('options');
             $survey_val_arr = explode(',',$request->get('survey_val_arr'));

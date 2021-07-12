@@ -375,7 +375,7 @@ $(function() {
 </script>
 <script type="text/javascript">
       //$( window ).on( "load", function() { Gen(); });
-      function Gen() {
+      function Gen1() {
           //var pdf = new jsPDF('p', 'mm', 'a4');
           //pdf.canvas.height = 595.28;
           //pdf.canvas.width = 841.89;
@@ -392,6 +392,38 @@ $(function() {
           /*pdf.addHTML($('#clickbind').html(), function() {
             pdf.save('test.pdf');
           });*/
-      }    
+      } 
+      function Gen(){
+
+        var HTML_Width = $("#clickbind").width();
+        var HTML_Height = $("#clickbind").height();
+        var top_left_margin = 15;
+        var PDF_Width = HTML_Width+(top_left_margin*2);
+        var PDF_Height = (PDF_Width*1.5)+(top_left_margin*2);
+        var canvas_image_width = HTML_Width;
+        var canvas_image_height = HTML_Height;
+        
+        var totalPDFPages = Math.ceil(HTML_Height/PDF_Height)-1;
+        
+
+        html2canvas($("#clickbind")[0],{allowTaint:true}).then(function(canvas) {
+            canvas.getContext('2d');
+            
+            console.log(canvas.height+"  "+canvas.width);
+            
+            
+            var imgData = canvas.toDataURL("image/jpeg", 1.0);
+            var pdf = new jsPDF('p', 'pt',  [PDF_Width, PDF_Height]);
+            pdf.addImage(imgData, 'JPG', top_left_margin, top_left_margin,canvas_image_width,canvas_image_height);
+            
+            
+            for (var i = 1; i <= totalPDFPages; i++) { 
+                pdf.addPage(PDF_Width, PDF_Height);
+                pdf.addImage(imgData, 'JPG', top_left_margin, -(PDF_Height*i)+(top_left_margin*4),canvas_image_width,canvas_image_height);
+            }
+            
+            pdf.save("evalflow.pdf");
+        });
+    };   
 </script> 
 @endsection
