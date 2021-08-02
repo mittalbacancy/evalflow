@@ -409,7 +409,7 @@ class SurveyController extends Controller
                        ->orderBy('resident.first_name', 'asc')
                        ->whereBetween('survey_lists.created_at', [$start_yr,$end_yr])
                        ->get()->toArray(); 
-        $survey_title_list  = DB::table('survey_email_template');
+        $survey_title_list  = DB::table('survey_email_template')->whereBetween('created_at', [$start_yr,$end_yr]);
         $survey_title_list  = $survey_title_list->orderBy('survey_name', 'asc')->get()->toArray(); 
 
         \DB::enableQueryLog();
@@ -509,7 +509,8 @@ class SurveyController extends Controller
 
         }
 
-        $survey_lists = $survey_lists->orderBy('survey_lists.created_at', 'desc')
+        $survey_lists = $survey_lists->groupBy('survey_lists.id')
+                                     ->orderBy('survey_lists.created_at', 'desc')
                                      ->whereBetween('survey_lists.created_at',[$start_yr,$end_yr])
                                      ->get()->toArray();
         //dd(\DB::getQueryLog());
@@ -657,7 +658,7 @@ class SurveyController extends Controller
                     $data = array('QRcodeurl' => $QRcodeurl,'username' => $username);
                     Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio){
                         $message->to($user_email_twillio, '')->subject
-                            ('Survey Preview link details');
+                            ('Resident Evaluation Link');
                         $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
                     });
                     

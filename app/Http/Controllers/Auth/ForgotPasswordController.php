@@ -34,7 +34,7 @@ class ForgotPasswordController extends Controller
      */
     public function __construct()
     {       
-        dump('here');exit;
+        //dump('here');exit;
         $this->middleware('guest');
     }
     
@@ -57,9 +57,11 @@ class ForgotPasswordController extends Controller
         $user = User::where('email',$request->email)->first();
         //DB::table('users')->where('email',$request->email)->first();        
         if(empty($user)){
-            return $this->sendResetLinkFailedResponse($request, 'passwords.user');
+            //echo "e";exit;
+            return 'passwords.user';
+            //$this->sendResetLinkFailedResponse($request, 'passwords.user');
         }       
-        
+        //echo "user";exit;
         $token = bcrypt('token');
         //$token = bcrypt(app('auth.password.broker')->createToken($user));
         DB::table('password_resets')->updateOrInsert(['email'=>$request->email],[
@@ -71,6 +73,7 @@ class ForgotPasswordController extends Controller
         //dump(env('FP_PASSWORD'));
         $token   = url('/') . '/password/reset/' .urlencode($token);
         try{
+                
                 $mail             = new PHPMailer\PHPMailer(); // create a n
                 $mail->IsSMTP();
                 $mail->SMTPDebug = false;
@@ -90,15 +93,16 @@ class ForgotPasswordController extends Controller
                 if ($mail->Send()) {
                     $response = 'passwords.sent';
                 } else {
-                    $response = '';
+                    $response = 'Error:'.$mail->ErrorInfo;
                 }
                 //dump($response);
-                //$response = 'passwords.sent';
-
+                //$response = 'passwords.sent';        
         }catch(\Exception $e){
-            //dump($e->getMessage());
-            $response = '';            
-        }   
+            //dump($e->getMessage());exit;
+            $response = 'Error:'.$e->getMessage();            
+        } 
+        //echo "eeee".$response;
+        //exit;  
         return $response;
     }
 

@@ -62,7 +62,7 @@ class ReportsController extends Controller
             $end_date   = getFinancialEndDate();
         }
         $survey_lists = $survey_lists->where('submitted',1);
-        $survey_lists = $survey_lists->where('survey_lists.requestby',$resident_id);        
+        $survey_lists = $survey_lists->where('survey_lists.user_id',$resident_id);        
         $survey_lists = $survey_lists->orderBy('survey_lists.created_at', 'desc')
                                      //->whereBetween('survey_lists.created_at',[$start_yr,$end_yr])
                                      ->get()->toArray();

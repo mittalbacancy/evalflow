@@ -8693,7 +8693,7 @@ table.text-center th {
     <meta name="description" content="">
     <meta name="author" content="">
      <link rel="shortcut icon" href="{{ url('dist/img/ct_fav.png') }}">
-    <title>Survey Form</title>
+    <title>Evaluation</title>
     <!-- Bootstrap core CSS -->
   
     <link href="css/bootstrap.min.css" rel="stylesheet" media="all" type="text/css">

@@ -231,7 +231,7 @@ class SurveyController extends Controller
                 $data = array('QRcodeurl'=>$QRcodeurl,'username'=>$username);                
                 Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio) {
                     $message->to($user_email_twillio, '')->subject
-                        ('Survey Preview link details');
+                        ('Resident Evaluation Link');
                     $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
                 });
             }            
