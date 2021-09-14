@@ -22,4 +22,21 @@ class SurveyList extends Model
     {
         return $this->belongsTo('App\User');
     }
+
+    public function doctorUser()
+    {
+        return $this->belongsTo('App\User','user_id','id');
+    }
+    public function residentUser()
+    {
+        return $this->belongsTo('App\User','requestby','id');
+    }
+    public function emailTemplate()
+    {
+        return $this->belongsTo('App\Model\SurveyEmailTemplate','survey_title','survey_name');
+    }
+    public function surveyAnswer()
+    {
+        return $this->hasMany('App\Model\SurveyAnswer','survey_track_id')->orderBy('question_id')->limit(1);
+    }
 }

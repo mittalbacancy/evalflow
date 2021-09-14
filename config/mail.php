@@ -29,7 +29,7 @@ return [
     |
     */
 
-    'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
+    'host' => env('MAIL_HOST', 'smtp.gmail.com'),
 
     /*
     |--------------------------------------------------------------------------
@@ -55,10 +55,10 @@ return [
     |
     */
 
-        /*'from' => [
-            'address' => env('MAIL_FROM_ADDRESS'),
-            'name' => env('MAIL_FROM_NAME'),
-        ],*/
+    'from' => [
+        'address' => env('MAIL_FROM_ADDRESS','welcome@connectthat.co'),
+        'name' => env('MAIL_FROM_NAME','ConnectTHAT'),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -84,9 +84,9 @@ return [
     |
     */
 
-    'username' => env('MAIL_USERNAME'),
+    'username' => env('MAIL_USERNAME','welcome@connectthat.co'),
 
-    'password' => env('MAIL_PASSWORD'),
+    'password' => env('MAIL_PASSWORD','xfvdokreismzaweo'),
 
     /*
     |--------------------------------------------------------------------------

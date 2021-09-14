@@ -16,11 +16,13 @@ class ReportsController extends Controller
 
         $resident_id = $request->resident_id;
         $daterange = $request->daterange; 
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
         $user = DB::table('users')->where('id',$resident_id)->first();
         $default_dropdown = DB::table('survey_lists')
                        ->leftJoin('users as doctor', 'doctor.id', '=', 'survey_lists.user_id')
                        ->leftJoin('users as resident', 'resident.id', '=', 'survey_lists.requestby')
-                       ->select('survey_lists.*','doctor.first_name as doctor_first_name','doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name','doctor.active','survey_lists.requestby as resident_id');
+                       ->select('survey_lists.*','doctor.first_name as doctor_first_name','doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name','doctor.active','survey_lists.requestby as resident_id');       
 
         if(Auth::user()->hasRole("ROLE_ADMIN")){
              
@@ -34,6 +36,7 @@ class ReportsController extends Controller
                        ->where('resident.active',1)                       
                        ->groupBy('survey_lists.requestby')                       
                        ->orderBy('resident.first_name', 'asc')
+                       ->whereBetween('survey_lists.created_at', [$start_yr,$end_yr])
                        ->get()->toArray(); 
 
         $survey_lists = DB::table('survey_lists')                       
@@ -41,6 +44,7 @@ class ReportsController extends Controller
                         ->leftJoin('users as resident', 'survey_lists.requestby', '=', 'resident.id')
                        /*->leftJoin('survey_email_template', 'survey_email_template.survey_name', '=', 'survey_lists.survey_title')*/
                        ->leftjoin('survey_email_template', 'survey_lists.survey_id', '=', 'survey_email_template.id')
+                       ->leftjoin('survey_email_template as template', 'survey_lists.survey_id', '=', 'template.id')
                        ->leftjoin('survey_type', 'survey_email_template.survey_type_id', '=', 'survey_type.id')
                        ->select('survey_lists.*','survey_lists.requestby as resident_id','survey_email_template.survey_type_id as sur_ty_id','survey_type.survey_type','doctor.first_name as doctor_first_name', 'doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name');
 
@@ -61,11 +65,25 @@ class ReportsController extends Controller
             $start_date = getFinancialStartDate();
             $end_date   = getFinancialEndDate();
         }
-        $survey_lists = $survey_lists->where('submitted',1);
-        $survey_lists = $survey_lists->where('survey_lists.user_id',$resident_id);        
-        $survey_lists = $survey_lists->orderBy('survey_lists.created_at', 'desc')
-                                     //->whereBetween('survey_lists.created_at',[$start_yr,$end_yr])
+        if($resident_id > 0){
+            $survey_lists = $survey_lists->where('submitted',1);
+            $survey_lists = $survey_lists->where(function($q) use ($resident_id){
+                $q->orWhere(function($q1) use ($resident_id){
+                    $q1->where('survey_email_template.survey_type_id',2)->where('survey_lists.user_id',$resident_id);
+                })->orWhere(function($q2) use ($resident_id){
+                    $q2->where('template.survey_type_id','!=',2)->where('survey_lists.requestby',$resident_id);
+                });
+                
+            });
+            //$survey_lists = $survey_lists->where('survey_lists.user_id',$resident_id);        
+            $survey_lists = $survey_lists->orderBy('survey_lists.created_at', 'desc')
+            //->whereBetween('survey_lists.created_at',[$start_yr,$end_yr])
                                      ->get()->toArray();
+        }else{
+            $survey_lists = [];
+        }
+        
+                                     
         $survey_track_id = array();
         foreach($survey_lists as $survey_list){
             array_push($survey_track_id,$survey_list->id);

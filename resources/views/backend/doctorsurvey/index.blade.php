@@ -101,7 +101,7 @@
                             </select>
                             </div>
                             <div class="form-group col-xs-3">
-                              <label for="active">Survey Title:</label>
+                              <label for="active">Evaluation Type:</label>
                                 <select class="form-resident" name="survey_title">
                                 <option value="">Select</option>
 
@@ -137,8 +137,8 @@
                     <div class="box-body table-responsive no-padding">
                         <table id="tbl" class="table data-tables table-striped table-hover" cellspacing="0" width="100%">
                             <thead>
-                            <tr>
-                                <th>Survey Title</th>
+                            <tr>                                
+                                <th>Evaluation Type</th>
                                 <th>Evaluator</th> 
                                 <th>Person being Evaluated</th>                               
                                 <th class='bool text-center'>Status</th>
@@ -150,21 +150,43 @@
                             </tr>
                             </thead>
                             <tbody>
-                             @foreach ($survey_lists as $survey_list)
-                                <tr>
-
+                             @foreach ($survey_lists1 as $survey_list)
+                             @php
+                             $sur_ty_id = isset($survey_list->emailTemplate) ? $survey_list->emailTemplate->survey_type_id : 0;
+                             @endphp
+                                <tr>                                     
                                     <td>{{ $survey_list->survey_title }} </td>
-
-                                    <td> @if($survey_list->sur_ty_id == 2 || $survey_list->sur_ty_id == 3)
+                                    <td> @if($sur_ty_id  == 2 || $sur_ty_id  == 3 || $sur_ty_id == 5)
                                         Anonymous
-                                        @else
-                                        {{ $survey_list->doctor_first_name }} {{ $survey_list->doctor_last_name }}
+                                        @else                                        
+                                         {{ isset($survey_list->doctorUser) ? $survey_list->doctorUser->first_name ." ". $survey_list->doctorUser->last_name : '' }}
                                         @endif 
                                     </td>
-                                    <td> @if($survey_list->sur_ty_id == 2 || $survey_list->sur_ty_id == 3)
-                                        {{ $survey_list->doctor_first_name }} {{ $survey_list->doctor_last_name }}
-                                        @else 
-                                        {{ $survey_list->resident_first_name }} {{ $survey_list->resident_last_name }}
+                                    <td>  
+                                        @if($survey_list->survey_title == 'Wards')
+                                            wards
+                                        @elseif($sur_ty_id  == 2 || $sur_ty_id  == 3)
+                                            {{ isset($survey_list->doctorUser) ? $survey_list->doctorUser->first_name ." ". $survey_list->doctorUser->last_name : '' }}
+                                        @elseif($sur_ty_id  == 5 && isset($survey_list->surveyAnswer))                                                           
+                                            @php
+                                                $surveyAnswer = $survey_list->surveyAnswer->first();
+                                            @endphp 
+                                            @if(isset($surveyAnswer->answers) && !empty($surveyAnswer->answers->dd_options))
+                                             @php                                                
+                                                $dd_options = json_decode($surveyAnswer->answers->dd_options);                    
+                                            @endphp
+                                            @foreach($dd_options as $key=> $dd_option) 
+                                                @php
+                                                $option_val = 'option_'.($key+1);
+                                                if($surveyAnswer->answer_id == $option_val ){$option_val = $dd_option ;break;}
+                                                @endphp
+                                            @endforeach
+                                            {{$option_val}}
+                                            @else
+                                            {{ isset($survey_list->residentUser) ? $survey_list->residentUser->first_name ." ". $survey_list->residentUser->last_name : '' }}
+                                            @endif
+                                        @else
+                                        {{ isset($survey_list->residentUser) ? $survey_list->residentUser->first_name ." ". $survey_list->residentUser->last_name : '' }}
                                         @endif
                                     </td>
                                    

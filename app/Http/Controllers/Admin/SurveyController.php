@@ -368,7 +368,7 @@ class SurveyController extends Controller
      *
      * @return \Illuminate\Http\Response
     */
-    public function viewSurvey(Request $request)
+    public function viewSurvey_old(Request $request)
     {   
         /*if (date('m') <= 06 && date('d') <= 25) {
             $financial_year = (date('Y')-1) . '-' . date('Y');
@@ -412,12 +412,19 @@ class SurveyController extends Controller
         $survey_title_list  = DB::table('survey_email_template')->whereBetween('created_at', [$start_yr,$end_yr]);
         $survey_title_list  = $survey_title_list->orderBy('survey_name', 'asc')->get()->toArray(); 
 
-        \DB::enableQueryLog();
+        \DB::enableQueryLog();           
         $survey_lists = DB::table('survey_lists')
-                       ->leftJoin('users as doctor', 'doctor.id', '=', 'survey_lists.user_id')
-                       ->leftJoin('users as resident', 'resident.id', '=', 'survey_lists.requestby')
-                       ->leftJoin('survey_email_template', 'survey_email_template.survey_name', '=', 'survey_lists.survey_title')
-                       ->select('survey_lists.*','doctor.first_name as doctor_first_name','doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name','doctor.active','survey_lists.requestby as resident_id','survey_email_template.survey_type_id as sur_ty_id');
+                       ->join('users as doctor', 'doctor.id', '=', 'survey_lists.user_id')
+                       ->join('users as resident', 'resident.id', '=', 'survey_lists.requestby')
+                       ->join('survey_email_template', 'survey_email_template.survey_name', '=', 'survey_lists.survey_title')
+                       /*->join('survey_answer as ans', function ($q) {
+                           $q->on('ans.survey_id', '=', 'survey_lists.survey_id')
+                           ->on('ans.survey_track_id', '=', 'survey_lists.id')                           
+                           ->on('ans.question_id', '=', 
+                               DB::raw('(select question_id from survey_answer where survey_id = ans.survey_id ORDER BY question_id LIMIT 1)'));
+                         })                                           
+                       ->join('answers','answers.question_id','=','ans.question_id')*/
+                       ->select('survey_lists.*','doctor.first_name as doctor_first_name','doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name','doctor.active','survey_lists.requestby as resident_id','survey_email_template.survey_type_id as sur_ty_id'/*,'ans.answer_id','answers.dd_options'*/);
 
         // $sur_ty = DB::table('survey_lists')
         //           ->join('survey_email_template', 'survey_email_template.survey_name', '=', 'survey_lists.survey_title');
@@ -438,8 +445,9 @@ class SurveyController extends Controller
                  if ($start_date && $end_date) {
                     if ($start_date == $end_date) {
                         $survey_lists = $survey_lists->where('survey_lists.created_at' ,'LIKE', '%' .$start_date.'%');
+
                     } else {
-                        $survey_lists = $survey_lists->whereBetween('survey_lists.created_at',[$start_date,$end_date]);      
+                        $survey_lists = $survey_lists->whereBetween('survey_lists.created_at',[$start_date,$end_date]); 
                     }
                     
                 }
@@ -453,24 +461,22 @@ class SurveyController extends Controller
                 $survey_lists = $survey_lists
                                 ->where('resident.hospital_id',$user->hospital_id)
                                 ->whereBetween('survey_lists.created_at',[$start_date,$end_date])
-                                ->where('requestby',$resident_id);
+                                ->where('requestby',$resident_id);                
             }
          }elseif($request->survey_name != null && $request->survey_name != ""){
             $resident_id = $request->survey_name;
             if(Auth::user()->hasRole("ROLE_ADMIN")){
-                $survey_lists = $survey_lists->where('requestby',$resident_id);
+                $survey_lists = $survey_lists->where('requestby',$resident_id);               
             }else{
                 $survey_lists = $survey_lists->where('requestby',$resident_id)->where('resident.hospital_id',$user->hospital_id);
-
             }
          }elseif($request->survey_title != null && $request->survey_title != ""){
             $survey_title = $request->survey_title;
             if(Auth::user()->hasRole("ROLE_ADMIN")){
-                $survey_lists = $survey_lists->where('survey_lists.survey_title',$survey_title);
+                $survey_lists = $survey_lists->where('survey_lists.survey_title',$survey_title);                
             }else{
                 $survey_lists = $survey_lists->where('survey_lists.survey_title',$survey_title)
                 ->where('resident.hospital_id',$user->hospital_id);
-
             }
          }elseif($request->daterange != null && $request->daterange != "" ){
             $daterange = $request->daterange;
@@ -488,13 +494,10 @@ class SurveyController extends Controller
             }else{
 
                  if($start_date == $end_date){
-                    $survey_lists = $survey_lists->where('survey_lists.created_at' ,'LIKE', '%' .$start_date.'%')->where('resident.hospital_id',$user->hospital_id);
+                    $survey_lists = $survey_lists->where('survey_lists.created_at' ,'LIKE', '%' .$start_date.'%')->where('resident.hospital_id',$user->hospital_id);                   
                 }else{
-                    $survey_lists = $survey_lists->whereBetween('survey_lists.created_at',[$start_date,$end_date])->where('resident.hospital_id',$user->hospital_id);
-                }
-
-               
-                
+                    $survey_lists = $survey_lists->whereBetween('survey_lists.created_at',[$start_date,$end_date])->where('resident.hospital_id',$user->hospital_id);                    
+                }                
             }
         }
 
@@ -504,9 +507,7 @@ class SurveyController extends Controller
             }else{
                 $user = Auth::user();
                 $survey_lists = $survey_lists->where('resident.hospital_id',$user->hospital_id);
-                
             }
-
         }
 
         $survey_lists = $survey_lists->groupBy('survey_lists.id')
@@ -517,7 +518,149 @@ class SurveyController extends Controller
 
         $daterange = $request->daterange;   
             // dd($survey_lists);
-        return view('backend.doctorsurvey.index', compact('survey_lists','default_dropdown','resident_id','daterange','survey_title_list','survey_title'));
+        return view('backend.doctorsurvey.index', compact('survey_lists','default_dropdown','resident_id','daterange','survey_title_list','survey_title','survey_lists1'));
+    }
+    public function viewSurvey(Request $request)
+    {   
+        /*if (date('m') <= 06 && date('d') <= 25) {
+            $financial_year = (date('Y')-1) . '-' . date('Y');
+        } else {
+            if (date('d') <= 24) {
+                $financial_year = (date('Y')-1) . '-' . date('Y');
+            } else {
+                
+                $financial_year = date('Y') . '-' . (date('Y') + 1);
+            }
+        }
+        
+        $yrs = explode('-',$financial_year);
+        $start_yr = "$yrs[0]-06-25";
+        $end_yr = "$yrs[1]-06-24";*/
+
+        $start_yr = getFinancialStartDate();
+        $end_yr   = getFinancialEndDate();
+
+        //dd($start_yr.'--'.$end_yr);
+
+       $resident_id = '';$survey_title='';
+       $default_dropdown = DB::table('survey_lists')
+                       ->leftJoin('users as doctor', 'doctor.id', '=', 'survey_lists.user_id')
+                       ->leftJoin('users as resident', 'resident.id', '=', 'survey_lists.requestby')
+                       ->select('survey_lists.*','doctor.first_name as doctor_first_name','doctor.last_name as doctor_last_name','resident.first_name as resident_first_name', 'resident.last_name as resident_last_name','doctor.active','survey_lists.requestby as resident_id');
+       
+       if(Auth::user()->hasRole("ROLE_ADMIN")){
+             
+       }else{
+            $user = Auth::user();
+            $default_dropdown = $default_dropdown->where('resident.hospital_id',$user->hospital_id);
+       }
+        $default_dropdown =  $default_dropdown
+                       ->where('doctor.active',1)
+                       ->where('resident.active',1)                       
+                       ->groupBy('survey_lists.requestby')                       
+                       ->orderBy('resident.first_name', 'asc')
+                       ->whereBetween('survey_lists.created_at', [$start_yr,$end_yr])
+                       ->get()->toArray(); 
+        $survey_title_list  = DB::table('survey_email_template')->whereBetween('created_at', [$start_yr,$end_yr]);
+        $survey_title_list  = $survey_title_list->orderBy('survey_name', 'asc')->get()->toArray(); 
+
+        \DB::enableQueryLog();
+        $survey_lists1 = new SurveyList;               
+        if($request->survey_name != null || $request->daterange != null){
+
+            if($request->survey_name != null && $request->daterange != "" && $request->daterange != null){
+
+            $daterange = $request->daterange;
+            $dates = explode(' - ', $daterange);
+            $start_date = date($dates[0]);
+            $end_date = date($dates[1]);
+            $resident_id = $request->survey_name;
+
+            if(Auth::user()->hasRole("ROLE_ADMIN")){
+                 if ($start_date && $end_date) {
+                    if ($start_date == $end_date) { 
+                        $survey_lists1 = $survey_lists1->where('created_at' ,'LIKE', '%' .$start_date.'%');
+
+                    } else {                          
+                        $survey_lists1 = $survey_lists1->whereBetween('created_at' ,[$start_date,$end_date]);   
+                    }                    
+                }
+                if ($resident_id) {                    
+                    $survey_lists1 = $survey_lists1->where('requestby',$resident_id);
+                }                
+            }else{
+                $user = Auth::user();                
+                $survey_lists1 = $survey_lists1
+                                ->whereHas('residentUser',function($q) use($user){
+                                    $q->where('hospital_id',$user->hospital_id);
+                                })                                
+                                ->whereBetween('created_at',[$start_date,$end_date])
+                                ->where('requestby',$resident_id);
+            }
+         }elseif($request->survey_name != null && $request->survey_name != ""){
+            $resident_id = $request->survey_name;
+            if(Auth::user()->hasRole("ROLE_ADMIN")){                
+                $survey_lists1 = $survey_lists1->where('requestby',$resident_id);
+            }else{
+                $survey_lists1 = $survey_lists1->where('requestby',$resident_id)
+                ->whereHas('residentUser',function($q) use($user){
+                                    $q->where('hospital_id',$user->hospital_id);
+                                });
+            }
+         }elseif($request->survey_title != null && $request->survey_title != ""){
+            $survey_title = $request->survey_title;
+            if(Auth::user()->hasRole("ROLE_ADMIN")){                
+                $survey_lists1 = $survey_lists1->where('survey_title',$survey_title);
+            }else{
+                $survey_lists1 = $survey_lists1->where('survey_title',$survey_title)
+                ->whereHas('residentUser',function($q) use($user){
+                                    $q->where('hospital_id',$user->hospital_id);
+                });
+            }
+         }elseif($request->daterange != null && $request->daterange != "" ){
+            $daterange = $request->daterange;
+            $dates = explode(' - ', $daterange);
+            $start_date = date($dates[0]);
+            $end_date = date($dates[1]);
+            if(Auth::user()->hasRole("ROLE_ADMIN")){
+                if($start_date == $end_date){                   
+                    $survey_lists1 = $survey_lists1->where('created_at' ,'LIKE', '%' .$start_date.'%');
+                }else{                    
+                    $survey_lists1 = $survey_lists1->whereBetween('created_at',[$start_date,$end_date]);
+                }               
+            }else{
+                 if($start_date == $end_date){                    
+                    $survey_lists1->where('created_at' ,'LIKE', '%' .$start_date.'%')->whereHas('residentUser',function($q) use($user){
+                                    $q->where('hospital_id',$user->hospital_id);
+                    });
+                }else{                   
+                    $survey_lists1 = $survey_lists1->whereBetween('created_at',[$start_date,$end_date])
+                    ->whereHas('residentUser',function($q) use($user){
+                                    $q->where('hospital_id',$user->hospital_id);
+                    });
+                }                
+            }
+        }
+
+        }else{
+            if(Auth::user()->hasRole("ROLE_ADMIN")){
+
+            }else{
+                $user = Auth::user();                
+                $survey_lists1 = $survey_lists1->whereHas('residentUser',function($q) use($user){
+                        $q->where('hospital_id',$user->hospital_id);
+                });                
+            }
+        }
+        $survey_lists1 = $survey_lists1->groupBy('id')
+                                     ->orderBy('created_at', 'desc')
+                                     ->whereBetween('created_at',[$start_yr,$end_yr])
+                                     ->get();
+        //dd(\DB::getQueryLog());
+
+        $daterange = $request->daterange;   
+            // dd($survey_lists);
+        return view('backend.doctorsurvey.index', compact('survey_lists1','default_dropdown','resident_id','daterange','survey_title_list','survey_title'));
     }
 
     public function filViewSurvey(Request $request)
@@ -659,7 +802,7 @@ class SurveyController extends Controller
                     Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio){
                         $message->to($user_email_twillio, '')->subject
                             ('Resident Evaluation Link');
-                        $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
+                        $message->from('welcome@connectthat.co','ConnectTHAT');
                     });
                     
                     

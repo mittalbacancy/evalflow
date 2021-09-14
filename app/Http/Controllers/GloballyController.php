@@ -115,6 +115,7 @@ class GloballyController extends Controller
                         ->get()->toArray();
 
             $survey_type = $submit_survey[0]->survey_type;
+            $survey_type_id = $submit_survey[0]->sur_ty_id;
 
             // $submit_name = $submit_survey[0]->first_name.' '.$submit_survey[0]->last_name;
             
@@ -129,7 +130,7 @@ class GloballyController extends Controller
 
             //}
            
-            return view('surveypreview', compact('surveys', 'urlcode', 'survey_track', 'questions_ids','submit_name','survey_type'));
+            return view('surveypreview', compact('surveys', 'urlcode', 'survey_track', 'questions_ids','submit_name','survey_type','survey_type_id'));
         }
     }
 
@@ -146,7 +147,7 @@ class GloballyController extends Controller
         $validator = Validator::make($request->all(), $rules);
         
         if ($validator->fails()) {
-             Log::channel('survey')->info('Validation Error=='.json_encode($validator));
+            // Log::channel('survey')->info('Validation Error=='.json_encode($validator));
             return Redirect::back()->withErrors($validator)->withInput($request->all());
         }
         
@@ -156,8 +157,8 @@ class GloballyController extends Controller
         }
 
         $answer_type = $request->get('answer_type');
-        Log::channel('survey')->info("\n");
-        Log::channel('survey')->info('START surveySubmit---'.Carbon::now());
+       // Log::channel('survey')->info("\n");
+       // Log::channel('survey')->info('START surveySubmit---'.Carbon::now());
         $survey_track = DB::table('survey_lists')
                         ->leftjoin('users as doctor', 'survey_lists.user_id', '=', 'doctor.id')
                         ->join('users', 'survey_lists.requestby', '=', 'users.id')
@@ -167,7 +168,7 @@ class GloballyController extends Controller
 
         if (!empty($survey_track) && $survey_track[0]->submitted == '0') {
             
-            Log::channel('survey')->info('IF---168');
+           // Log::channel('survey')->info('IF---168');
 
             $survey_answer = array();
             $tempCodes = array();
@@ -240,9 +241,9 @@ class GloballyController extends Controller
             }
 
             if ($surveytypeidcheck->sur_type_id == 2) {
-                Log::channel('survey')->info('IF---209 -- surveytypeidcheck->sur_type_id == 2');
+                //Log::channel('survey')->info('IF---209 -- surveytypeidcheck->sur_type_id == 2');
                 /************ Send email to Resident and Admin ***********/
-                $data['title'] = "Evaluation submitted by Dr." . '' . $survey_track[0]->doctor_first_name . ' ' . $survey_track[0]->doctor_last_name;
+                /*$data['title'] = "Evaluation submitted by Dr." . '' . $survey_track[0]->doctor_first_name . ' ' . $survey_track[0]->doctor_last_name;
                 $data['doctoremail'] = $survey_track[0]->doctor_email;
                 $data['doctorname'] =  $survey_track[0]->doctor_last_name;
                 $data['residentname'] =  $survey_track[0]->first_name;
@@ -250,7 +251,7 @@ class GloballyController extends Controller
                 $data['survey_url'] =  $survey_track[0]->preview_url;
                 //$user_email = 'shrutipatel@bacancytechnology.com';
                 $subject = "Evaluation submitted by Dr." . '' . $survey_track[0]->doctor_first_name . ' ' . $survey_track[0]->doctor_last_name;
-                $user_email = $survey_track[0]->email;
+                $user_email = $survey_track[0]->email;*/
 
 
                 // Mail::send('survey_email_resident', $data, function ($message) use ($user_email,$subject) {
@@ -258,21 +259,22 @@ class GloballyController extends Controller
                 //     $message->from(env('MAIL_USERNAME'), 'Admin');
                 // });
 
-                try{
+                /*try{
                     Mail::send('survey_email_admin', $data, function ($message) use ($user_email,$subject) {
                         $message->to(env('MAIL_USERNAME'), '')->subject($subject);
                         $message->from(env('MAIL_USERNAME'), 'Admin');
                     });
-                    /************ Send email to Resident and Admin **********/
+                    
                 } catch(\Exception $e){
 
-                }
+                }*/
+                /************ Send email to Resident and Admin **********/
 
                 /************ Send push notification to Resident  ***********/
 
                 $deviceToken = $survey_track[0]->device_token;
-                if (!empty($deviceToken)) {
-                    /*$string=  $data['survey_title']." submitted by Dr. ".$data['doctorname'];
+                /*if (!empty($deviceToken)) {
+                    $string=  $data['survey_title']." submitted by Dr. ".$data['doctorname'];
                     $message = \PushNotification::Message($string, array(
                         'sound' => 'default',
                         'custom' => array('custom data' => array(
@@ -286,8 +288,8 @@ class GloballyController extends Controller
                             ->send($message);    
                     } catch(\Exception $e){
                         
-                    }*/
-                }
+                    }
+                }*/
 
                 /************ Send push notification to Resident  ***********/
 
@@ -296,7 +298,7 @@ class GloballyController extends Controller
                 $update_submitted = SurveyList::where('urlcode', $segment2)->update($updated_data);
                 return \Redirect::route('surveypreview', [$segment2])->with('message', 'Survey submitted successfully.');
             } else {
-                 Log::channel('survey')->info('else---265 -- surveytypeidcheck->sur_type_id != 2');      
+                // Log::channel('survey')->info('else---265 -- surveytypeidcheck->sur_type_id != 2');      
                 // decode codes values
                 $newCode = array();
                 foreach ($tempCodes as $key => $value) {
@@ -346,8 +348,8 @@ class GloballyController extends Controller
                 $end_yr   = Carbon::parse(getFinancialEndDate())->format('Y-m-d');
                 
                 //echo $start_yr."-".$end_yr;  
-                Log::channel('survey')->info('checking date range--->'.$start_yr."=======".$end_yr);
-                Log::channel('survey')->info('resident_id =='.$resident_id);
+               // Log::channel('survey')->info('checking date range--->'.$start_yr."=======".$end_yr);
+               // Log::channel('survey')->info('resident_id =='.$resident_id);
                 \DB::enableQueryLog();
                 $find_resident_in_eval = EvaluationCalculation::where('resident_id', $resident_id)
                          //->whereBetween('created_at',[$start_yr,$end_yr])                           
@@ -360,11 +362,11 @@ class GloballyController extends Controller
                 //select * from `evaluation_calculation` where `resident_id` = 135 and (DATE_FORMAT(created_at,'%Y-%m-%d') >= '2021-06-25' and DATE_FORMAT(created_at,'%Y-%m-%d') <= '2022-06-24')
                 //echo count($find_resident_in_eval);
                 //echo "here";exit;
-                Log::channel('survey')->info('Query=='.json_encode(\DB::getQueryLog()));
+               // Log::channel('survey')->info('Query=='.json_encode(\DB::getQueryLog()));
                 if(count($find_resident_in_eval) > 0){   
 
-                    Log::channel('survey')->info('find_resident_in_eval > 0');
-                    Log::channel('survey')->info('find_resident_in_eval id ==='.$find_resident_in_eval[0]['id']);
+                   // Log::channel('survey')->info('find_resident_in_eval > 0');
+                   // Log::channel('survey')->info('find_resident_in_eval id ==='.$find_resident_in_eval[0]['id']);
 
                     $PC1 = array_key_exists("PC1",$mergedCode) ? $mergedCode['PC1']+$find_resident_in_eval[0]['PC1'] : $find_resident_in_eval[0]['PC1'];
                     $PC2 = array_key_exists("PC2",$mergedCode) ? $mergedCode['PC2']+$find_resident_in_eval[0]['PC2'] : $find_resident_in_eval[0]['PC2'];
@@ -411,14 +413,14 @@ class GloballyController extends Controller
                     $count_ICS3 = array_key_exists("ICS3",$count_vals) ? $count_vals['ICS3'] + $find_resident_in_eval[0]['count_ICS3']: $find_resident_in_eval[0]['count_ICS3'];
 
                     //echo $find_resident_in_eval[0]['id'];
-                    Log::channel('survey')->info('Executing update query::'.Carbon::now());
+                   // Log::channel('survey')->info('Executing update query::'.Carbon::now());
                     EvaluationCalculation::where('resident_id', $resident_id)->where('id', $find_resident_in_eval[0]['id'])->update(['PC1' => $PC1,'PC2' => $PC2,'PC3' => $PC3,'PC4' => $PC4,'PC5' => $PC5,'MK1' => $MK1,'MK2' => $MK2,'MK3' => $MK3,'SBP1' => $SBP1,'SBP2' => $SBP2,'SBP3' => $SBP3,'PBLI1' => $PBLI1,'PBLI2' => $PBLI2, 'PROF1' => $PROF1,'PROF2' => $PROF2,'PROF3' => $PROF3,'PROF4' => $PROF4,'ICS1' => $ICS1,'ICS2' => $ICS2,'ICS3' => $ICS3, 'count_PC1' => $count_PC1, 'count_PC2' => $count_PC2, 'count_PC3' => $count_PC3, 'count_PC4' => $count_PC4, 'count_PC5' => $count_PC5, 'count_MK1' => $count_MK1, 'count_MK2' => $count_MK2, 'count_MK3' => $count_MK3, 'count_SBP1' => $count_SBP1, 'count_SBP2' => $count_SBP2, 'count_SBP3' => $count_SBP3, 'count_PBLI1' => $count_PBLI1, 'count_PBLI2' => $count_PBLI2, 'count_PROF1' => $count_PROF1, 'count_PROF2' => $count_PROF2, 'count_PROF3' => $count_PROF3, 'count_PROF4' => $count_PROF4, 'count_ICS1' => $count_ICS1, 'count_ICS2' => $count_ICS2, 'count_ICS3' => $count_ICS3,'updated_at' => Carbon::now()]);
                 }else{
                     //insert 
                     // echo "add";
                     // dd($mergedCode);
-                    Log::channel('survey')->info('else--new evaluation calculation entry');
-                    Log::channel('survey')->info('resident_id='.$resident_id);
+                   // Log::channel('survey')->info('else--new evaluation calculation entry');
+                   // Log::channel('survey')->info('resident_id='.$resident_id);
                     $start_yr = Carbon::parse(getFinancialStartDate())->format('Y-m-d');
                     $end_yr   = Carbon::parse(getFinancialEndDate())->format('Y-m-d');
                     $find_resident_in_eval = EvaluationCalculation::where('resident_id', $resident_id)
@@ -485,29 +487,30 @@ class GloballyController extends Controller
                 $data['residentname'] =  $survey_track[0]->first_name;
                 $data['survey_title'] =  $survey_track[0]->survey_title;
                 $data['survey_url'] =  $survey_track[0]->preview_url;
-                $user_email = 'shrutipatel@bacancytechnology.com';
+                //$user_email = 'shrutipatel@bacancytechnology.com';
                 $subject = "Evaluation submitted by Dr." . '' . $survey_track[0]->doctor_first_name . ' ' . $survey_track[0]->doctor_last_name;
                 $user_email = $survey_track[0]->email;
 
                 if ($surveytypeidcheck->sur_type_id == 4){ 
+                    try{
+                        Mail::send('survey_email_resident', $data, function ($message) use ($user_email,$subject) {
+                            $message->to($user_email, '')->subject($subject);
+                            //$message->from('connectthatapp@gmail.com', 'Admin');
+                            $message->from('welcome@connectthat.co', 'ConnectTHAT');
+                            
+                        });
 
-                    Mail::send('survey_email_resident', $data, function ($message) use ($user_email,$subject) {
-                        $message->to($user_email, '')->subject($subject);
-                        //$message->from('connectthatapp@gmail.com', 'Admin');
-                        $message->from(env('MAIL_USERNAME'), 'Admin');
+                        Mail::send('survey_email_admin', $data, function ($message) use ($user_email,$subject) {
+                            $message->to('welcome@connectthat.co', '')->subject($subject);
+                            $message->from('welcome@connectthat.co', 'ConnectTHAT');
+                        });
                         
-                    });
+                    } catch(\Exception $e){
+
+                    }
                 }
 
-                try{
-                    Mail::send('survey_email_admin', $data, function ($message) use ($user_email,$subject) {
-                        $message->to(env('MAIL_USERNAME'), '')->subject($subject);
-                        $message->from(env('MAIL_USERNAME'), 'Admin');
-                    });
-                    
-                } catch(\Exception $e){
-
-                }
+                
                 /************ Send email to Resident and Admin **********/
                 
                 /************ Send push notification to Resident  ***********/
@@ -536,7 +539,7 @@ class GloballyController extends Controller
                 SurveyAnswer::insert($survey_answer);
                 $updated_data = array('submitted' => '1');
                 $update_submitted = SurveyList::where('urlcode', $segment2)->update($updated_data);
-                Log::channel('survey')->info('End OF process=='.Carbon::now()."\n");
+               // Log::channel('survey')->info('End OF process=='.Carbon::now()."\n");
 
                 return \Redirect::route('surveypreview', [$segment2])->with('message', 'Survey submitted successfully.');
             }

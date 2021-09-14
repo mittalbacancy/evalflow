@@ -101,24 +101,24 @@ class SurveyController extends Controller
     public function surveyRequest(Request $request)
     {
        if($request->survey_type_id == 1 || $request->survey_type_id == 5){
-        $validator = Validator::make($request->all(), [
-            'survey_type_id' => 'required',
-            'survey_id' => 'required',
-            'survey_title' => 'required',
-            'resident_id' => 'required',
-           
-        ]);
-    }else{
+            $validator = Validator::make($request->all(), [
+                'survey_type_id' => 'required',
+                'survey_id' => 'required',
+                'survey_title' => 'required',
+                'resident_id' => 'required',
+               
+            ]);
+        }else{
 
-        $validator = Validator::make($request->all(), [
-            'survey_type_id' => 'required',
-            'survey_id' => 'required',
-            'survey_title' => 'required',
-            'resident_id' => 'required',
-            'doctor_id' => 'required'
-        ]);
+            $validator = Validator::make($request->all(), [
+                'survey_type_id' => 'required',
+                'survey_id' => 'required',
+                'survey_title' => 'required',
+                'resident_id' => 'required',
+                'doctor_id' => 'required'
+            ]);
 
-    }
+        }
         if ($validator->fails()) {
             // /return response()->json(['error'=>$validator->errors()], 401);
             $error = json_decode($validator->errors());
@@ -173,16 +173,17 @@ class SurveyController extends Controller
                               ->where('id',$user_id_sms)
                               ->first();
 
-            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';            
-            $username = $user_name_sms->first_name.' '.$user_name_sms->last_name;   
+            $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';
+            $username = $user_name_sms->first_name.' '.$user_name_sms->last_name; 
+            $username_twillio = $user_twillio->first_name.' '.$user_twillio->last_name;   
             $QRcodeurl = $surveyList->preview_url;         
             if(!empty($user_email_twillio)){
                  try{
                     $data = array('QRcodeurl'=>$QRcodeurl,'username'=>$username);                
-                    Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio) {
-                        $message->to($user_email_twillio, '')->subject
+                    Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio,$username_twillio) {
+                        $message->to($user_email_twillio, $username_twillio)->subject
                             ('Resident Evaluation Link');
-                        $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
+                        $message->from('welcome@connectthat.co','ConnectTHAT');
                     });
                 }catch(\Exception $e){
                     //return response()->json(['message' => $e->getMessage(), 'status' => 401], $this->successStatus);
@@ -224,15 +225,14 @@ class SurveyController extends Controller
                               ->first();
 
             $user_email_twillio = isset($user_twillio) ? $user_twillio->email : '';
-
             $username = $user_name_sms->first_name.' '.$user_name_sms->last_name;   
             $QRcodeurl = $surveyList->preview_url;         
             if(!empty($user_email_twillio)){
                 $data = array('QRcodeurl'=>$QRcodeurl,'username'=>$username);                
-                Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio) {
-                    $message->to($user_email_twillio, '')->subject
-                        ('Resident Evaluation Link');
-                    $message->from(env('MAIL_USERNAME'),env('MAIL_FROM_NAME'));
+                Mail::send('emailPreviewDetails', $data, function($message) use ($user_email_twillio,$username) {
+                    $message->to($user_email_twillio, $username)->subject
+                        ('Resident Evaluation Link');                    
+                    $message->from('welcome@connectthat.co','ConnectTHAT');
                 });
             }            
  

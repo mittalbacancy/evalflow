@@ -107,9 +107,9 @@ class UserController extends Controller
 
             try{
 	            Mail::send('emails', $data, function($message) {
-	                $message->to(env('MAIL_USERNAME'), '')->subject
+	                $message->to('welcome@connectthat.co', '')->subject
 	                    ('New User Register');
-	                $message->from(env('MAIL_USERNAME'),'Admin');
+	                $message->from('welcome@connectthat.co','Admin');
 	            });
             } catch(\Exception $e){
                 //print_r($e->getMessage());

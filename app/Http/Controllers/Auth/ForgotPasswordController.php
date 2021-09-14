@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Support\Facades\Validator;
 use Mail,DB,Carbon\Carbon;
-use PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 use App\User;
 use Illuminate\Auth\Passwords\PasswordBroker;
 
@@ -74,18 +76,19 @@ class ForgotPasswordController extends Controller
         $token   = url('/') . '/password/reset/' .urlencode($token);
         try{
                 
-                $mail             = new PHPMailer\PHPMailer(); // create a n
+                $mail             = new PHPMailer(true); // create a n
                 $mail->IsSMTP();
-                $mail->SMTPDebug = false;
+                $mail->SMTPDebug = 0;
                 $mail->do_debug = 0;
+                $mail->Debugoutput = 'html';
                 $mail->SMTPAuth   = true; // authentication enabled
-                $mail->SMTPSecure = 'tls'; // secure transfer enabled REQUIRED for Gmail
-                $mail->Host       = "smtp.gmail.com";
-                $mail->Port       = 587; // or 587
+                $mail->SMTPSecure = 'tls';//env('MAIL_ENCRYPTION'); // secure transfer enabled REQUIRED for Gmail
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->Port       = 587;//env('MAIL_PORT'); // or 587
                 $mail->IsHTML(true);
-                $mail->Username = env('FP_EMAIL');
-                $mail->Password = env('FP_PASSWORD');
-                $mail->SetFrom(env('FP_EMAIL'), env('MAIL_FROM_NAME'));
+                $mail->Username = 'forgotpassword@connectthat.co';
+                $mail->Password = 'rvghjayvlsspooxi';
+                $mail->SetFrom('forgotpassword@connectthat.co', 'ConnectTHAT');
                 $mail->Subject = 'Reset Password Notification';
                 $mail->Body    = view('fpEmail', compact('token'))->render();;
                 $mail->AddAddress($request->email);
@@ -93,13 +96,13 @@ class ForgotPasswordController extends Controller
                 if ($mail->Send()) {
                     $response = 'passwords.sent';
                 } else {
-                    $response = 'Error:'.$mail->ErrorInfo;
+                    $response = $mail->ErrorInfo;
                 }
                 //dump($response);
                 //$response = 'passwords.sent';        
         }catch(\Exception $e){
             //dump($e->getMessage());exit;
-            $response = 'Error:'.$e->getMessage();            
+            $response = $e->getMessage();            
         } 
         //echo "eeee".$response;
         //exit;  
@@ -124,7 +127,7 @@ class ForgotPasswordController extends Controller
             $result = Mail::send('fpEmail', $data, function($message) use ($request) {
                 $message->to($request->email);
                 $message->subject('Reset Password Notification');
-                $message->from('forgotpassword@connectthat.co',env('MAIL_FROM_NAME'));
+                $message->from('forgotpassword@connectthat.co','ConnectTHAT');
             }); 
             $response = 'passwords.sent';
 
@@ -133,7 +136,4 @@ class ForgotPasswordController extends Controller
         }   
         return $response;
     }
-
-    
-
 }

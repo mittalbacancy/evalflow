@@ -8747,8 +8747,31 @@ table.text-center th {
                 </div>
 
                 <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-12">                    
+                @if($survey_type_id == 5 && $survey_track->submitted == 1)
+                    @foreach ($surveys as $item=>$survey_value)
+                        @if(!empty($survey_value->dd_options))
+                        @php
+                        $dd_options = json_decode($survey_value->dd_options);
+                        @endphp 
+
+                        @foreach($dd_options as $key=> $dd_option) 
+                            @php
+                            $option_val = 'option_'.($key+1);
+                            @endphp
+                            
+                            @if( isset($survey_value->final_question) && ($survey_value->final_question == $survey_value->question_id) && $survey_value->final_answer == $option_val)
+                             
+                             <h5 class="h44">{{$dd_option}}</h5>
+                            @endif
+                            
+                        @endforeach
+                        @endif
+                    @endforeach
+
+                @else
                  <h5 class="h44"> {{($survey_type != 'Resident of Attending') ? 'Person Being Evaluated' : 'Attending Name'  }} : {{$submit_name}}</h5>
+                @endif
                 </div></br>
                 <div class="col-md-12">
                  <h5 class="h44">Survey Type: {{$survey_type}}</h5>
@@ -8827,10 +8850,10 @@ table.text-center th {
                     @endif                   
 
                     @if(!empty($survey_value->dd_options))
-                    @php
-                    $dd_options = json_decode($survey_value->dd_options);
-                    $dd_codes = json_decode($survey_value->dd_code,true);
-                    @endphp                                       
+                        @php
+                        $dd_options = json_decode($survey_value->dd_options);
+                        $dd_codes = json_decode($survey_value->dd_code,true);
+                        @endphp                                    
                      <div class="row">
                         <div class="col-md-5">
                           <div class="form-group">
