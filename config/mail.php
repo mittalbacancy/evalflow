@@ -86,7 +86,7 @@ return [
 
     'username' => env('MAIL_USERNAME','welcome@connectthat.co'),
 
-    'password' => env('MAIL_PASSWORD','xfvdokreismzaweo'),
+    'password' => env('MAIL_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------

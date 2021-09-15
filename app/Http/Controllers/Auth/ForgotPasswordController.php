@@ -87,7 +87,7 @@ class ForgotPasswordController extends Controller
                 $mail->Port       = 587;//env('MAIL_PORT'); // or 587
                 $mail->IsHTML(true);
                 $mail->Username = 'forgotpassword@connectthat.co';
-                $mail->Password = 'rvghjayvlsspooxi';
+                $mail->Password = env('FP_PASSWORD');
                 $mail->SetFrom('forgotpassword@connectthat.co', 'ConnectTHAT');
                 $mail->Subject = 'Reset Password Notification';
                 $mail->Body    = view('fpEmail', compact('token'))->render();;
